@@ -12,6 +12,7 @@ import {
   scoreExpandTurn,
   SYSTEM_IDS,
   SYSTEMS,
+  systemsOf,
   totalOf,
 } from "../src/index.js";
 import type { GameConfig, GameState } from "../src/types.js";
@@ -187,7 +188,12 @@ describe("panel deviation: dead Remnant leaves play", () => {
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "collapse" }); // P1 remnant on RIM only
     expect(g.players[0]!.remnants).toHaveLength(1);
-    g = apply(g, { type: "recall", take: {} }); // P2 re-enters RIM (rim gate) and destroys the remnant
+    const take: Record<string, number> = {};
+    for (const id of systemsOf(g, 1, "active")) {
+      const spare = g.systems[id]!.tokens - 1;
+      if (spare > 0) take[id] = spare;
+    }
+    g = apply(g, { type: "recall", take }); // P2 gathers its army, then destroys the remnant
     g = apply(g, { type: "conquer", target: RIM });
     expect(g.players[0]!.remnants).toHaveLength(0);
     expect(g.speciesDiscard).toContain("ossian_prospectors");

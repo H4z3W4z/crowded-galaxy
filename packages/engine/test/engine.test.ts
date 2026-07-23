@@ -30,6 +30,15 @@ const OCEAN_RIM = SYSTEM_IDS.find((id) => SYSTEMS[id]!.rimGate && SYSTEMS[id]!.p
 function cheapest(g: GameState, player = 0): { target: string; cost: number } {
   return legalTargets(g, player).slice().sort((a, b) => a.cost - b.cost)[0]!;
 }
+/** All spare population (everything above 1 per system) for a recall. */
+function allSpare(g: GameState, player: number): Record<string, number> {
+  const take: Record<string, number> = {};
+  for (const id of systemsOf(g, player, "active")) {
+    const spare = g.systems[id]!.tokens - 1;
+    if (spare > 0) take[id] = spare;
+  }
+  return take;
+}
 /** Plain conquest cost (no attacker discounts): base 2 + neutrals + hazard. */
 function plainCost(g: GameState, id: string): number {
   return 2 + g.systems[id]!.neutrals + (SYSTEMS[id]!.hazard ? 1 : 0);
@@ -241,7 +250,7 @@ describe("collapse and remnants", () => {
     g = apply(g, { type: "conquer", target: p2rim });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "collapse" }); // P1 remnant on RIM
-    g = apply(g, { type: "recall", take: {} });
+    g = apply(g, { type: "recall", take: allSpare(g, 1) }); // P2 gathers its army
     const cost = 2 + 1; // RIM: base 2 + 1 remnant token
     const before = g.players[1]!.active!.hand;
     // P2 needs to reach RIM; RIM is a rim gate so a launched/relaunched civ can always enter it.

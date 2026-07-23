@@ -502,6 +502,18 @@ function autoRedeploy(g: GameState, player: PlayerId): void {
     }
   }
   g.turn.jovianBonus = 0;
+  // Deploy the rest of the gathered army evenly across held systems (fewest first),
+  // rather than stranding recalled tokens in hand. This is the default redeploy.
+  const own = systemsOf(g, player, "active");
+  if (own.length > 0 && p.active.hand > 0) {
+    const order = own.slice().sort((a, b) => g.systems[a]!.tokens - g.systems[b]!.tokens || a.localeCompare(b));
+    let i = 0;
+    while (p.active.hand > 0) {
+      g.systems[order[i % order.length]!]!.tokens += 1;
+      p.active.hand -= 1;
+      i += 1;
+    }
+  }
   g.phase = "post";
 }
 

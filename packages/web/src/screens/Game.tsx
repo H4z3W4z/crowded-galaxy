@@ -198,26 +198,19 @@ function PhaseControls({
     return (
       <Panel surface="inset" pad="12px">
         <ActionTitle>Begin your turn</ActionTitle>
+        <div style={{ fontSize: 13, color: "var(--ink-3)", marginBottom: 8 }}>
+          Your army gathers automatically — every system keeps one token and the rest come into hand to conquer with.
+        </div>
         <Row>
           <Button
             variant="gold"
             size="sm"
             icon="rocket"
-            title="Pull spare tokens off your systems (leaving 1 each) back into hand, then conquer."
+            title="Gather your spare population into hand and conquer. Redeploy your army at the end."
             onClick={() => dispatch({ type: "recall", take: recallAllSpare(game) })}
           >
-            Recall spare & expand
+            Expand
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            title="Keep every token where it is and go straight to conquering."
-            onClick={() => dispatch({ type: "recall", take: {} })}
-          >
-            Expand without recall
-          </Button>
-        </Row>
-        <Row style={{ marginTop: 8 }}>
           <Button
             variant="danger"
             size="sm"

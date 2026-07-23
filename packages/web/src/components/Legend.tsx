@@ -2,13 +2,24 @@
 import { useState } from "react";
 import { PlanetOrb } from "@ds/components/game/PlanetOrb.jsx";
 import { IconButton } from "@ds/components/core/IconButton.jsx";
+import { Icon } from "@ds/components/icons/Icon.jsx";
 import { MAP_LEGEND, PLANET_LEGEND } from "../legend";
 
 export function LegendButton() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <div style={{ position: "absolute", top: 12, right: 12, zIndex: 5 }}>
+      <div style={{ position: "absolute", top: 12, right: 12, zIndex: 5, display: "flex", gap: 8, alignItems: "center" }}>
+        <a
+          href="/field-guide.html"
+          target="_blank"
+          rel="noopener"
+          title="Open the illustrated field guide in a new tab"
+          className="cg-btn cg-btn--secondary cg-btn--sm"
+          style={{ textDecoration: "none" }}
+        >
+          <Icon name="orbit" size={15} /> Field Guide
+        </a>
         <IconButton name="eye" size="md" variant="secondary" label="Map legend" onClick={() => setOpen(true)} />
       </div>
       {open && <LegendPanel onClose={() => setOpen(false)} />}
@@ -68,6 +79,15 @@ function LegendPanel({ onClose }: { onClose: () => void }) {
         <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.5 }}>
           The galaxy is four spiral arms around a dense, heavily defended core. New civilizations enter at the Rim Gates on the outer frontier and push inward. The core holds most of the Relics — it's the contested prize. Wormholes are the only fast way across the galaxy.
         </div>
+        <a
+          href="/field-guide.html"
+          target="_blank"
+          rel="noopener"
+          className="cg-btn cg-btn--gold cg-btn--sm"
+          style={{ textDecoration: "none", marginTop: 18 }}
+        >
+          <Icon name="orbit" size={15} /> Open the full field guide
+        </a>
       </div>
     </div>
   );

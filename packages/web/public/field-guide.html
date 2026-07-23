@@ -1,0 +1,404 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
+</head><body>
+<title>Crowded Galaxy — Field Guide</title>
+<style>
+  :root {
+    --space-0: #120F20; --space-1: #1C1930; --space-2: #272343; --card: #1E1B33;
+    --ink: #EFEAF8; --ink-2: #B6B0CE; --ink-3: #8B84A8;
+    --line: rgba(239,234,248,.12); --line-mid: rgba(239,234,248,.26);
+    --gold: #E6B94E; --on-accent: #171420;
+    --hazard: #F0673A; --relic: #C061DA; --wormhole: #F06AA6;
+    --p1: #E4564A; --p2: #E6B84E; --p3: #54C4D6; --p4: #A66FE6; --p5: #5FBE78;
+    --pt-terran: #6FB33C; --pt-ocean: #3B8AD0; --pt-barren: #D89B44;
+    --pt-gas: #EFA23F; --pt-ice: #6FC4E8; --pt-volcanic: #E85D33;
+    --block-border: #EFEAF8; --shadow: #05040E;
+    --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-body: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --space-0: #EBE4D6; --space-1: #F5F0E5; --space-2: #FBF8F1; --card: #FBF7EE;
+      --ink: #1A1626; --ink-2: #514A63; --ink-3: #746D8B;
+      --line: rgba(26,22,38,.12); --line-mid: rgba(26,22,38,.24);
+      --gold: #B98A22; --hazard: #D2542A; --relic: #9C3CB6; --wormhole: #CE4684;
+      --block-border: #1A1626; --shadow: #C7BDA8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --space-0: #120F20; --space-1: #1C1930; --space-2: #272343; --card: #1E1B33;
+    --ink: #EFEAF8; --ink-2: #B6B0CE; --ink-3: #8B84A8;
+    --line: rgba(239,234,248,.12); --line-mid: rgba(239,234,248,.26);
+    --gold: #E6B94E; --hazard: #F0673A; --relic: #C061DA; --wormhole: #F06AA6;
+    --block-border: #EFEAF8; --shadow: #05040E;
+  }
+  :root[data-theme="light"] {
+    --space-0: #EBE4D6; --space-1: #F5F0E5; --space-2: #FBF8F1; --card: #FBF7EE;
+    --ink: #1A1626; --ink-2: #514A63; --ink-3: #746D8B;
+    --line: rgba(26,22,38,.12); --line-mid: rgba(26,22,38,.24);
+    --gold: #B98A22; --hazard: #D2542A; --relic: #9C3CB6; --wormhole: #CE4684;
+    --block-border: #1A1626; --shadow: #C7BDA8;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--space-0); color: var(--ink);
+    font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px 120px; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 800; line-height: 1.04; text-wrap: balance; margin: 0; }
+  p { margin: 0 0 1em; max-width: 66ch; }
+  a { color: var(--gold); }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+
+  /* Hero */
+  .hero { position: relative; padding: 96px 24px 64px; overflow: hidden; border-bottom: 2px solid var(--block-border); }
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .hero-inner { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; }
+  .hero h1 {
+    font-size: clamp(48px, 11vw, 128px); letter-spacing: -.02em; margin: 8px 0 0;
+    line-height: .92;
+  }
+  .hero h1 .stroke { color: transparent; -webkit-text-stroke: 2px var(--ink); }
+  .hero .tag { font-family: var(--font-display); font-weight: 700; font-size: clamp(20px, 3.2vw, 30px); color: var(--ink); margin: 18px 0 6px; max-width: 20ch; text-wrap: balance; }
+  .hero .lede { color: var(--ink-2); max-width: 54ch; font-size: 18px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-mono);
+    font-size: 12px; font-weight: 700; letter-spacing: .04em; padding: 5px 12px;
+    border: 2px solid var(--block-border); border-radius: 999px; background: var(--card);
+    box-shadow: 3px 3px 0 var(--shadow); margin-top: 26px;
+  }
+  .badge .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gold); }
+
+  /* Sections */
+  section { margin-top: 76px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+  .sec-head h2 { font-size: clamp(26px, 4.4vw, 40px); letter-spacing: -.015em; }
+  .sec-head .rule { flex: 1; height: 2px; background: var(--line-mid); min-width: 30px; align-self: center; }
+  .intro { color: var(--ink-2); font-size: 18px; max-width: 62ch; }
+
+  /* Print-block card */
+  .card {
+    background: var(--card); border: 2px solid var(--block-border); border-radius: 14px;
+    box-shadow: 5px 5px 0 var(--shadow); padding: 22px 24px;
+  }
+
+  /* Rhythm — numbered cycle */
+  .cycle { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+  .beat { position: relative; }
+  .beat .num {
+    font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--on-accent);
+    background: var(--gold); border: 2px solid var(--block-border); border-radius: 50%;
+    width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px; box-shadow: 2px 2px 0 var(--shadow);
+  }
+  .beat h3 { font-size: 18px; margin-bottom: 6px; }
+  .beat p { font-size: 15px; color: var(--ink-2); margin: 0; }
+
+  /* Two-column split */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; }
+  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+
+  /* Board chip — symbols always sit on deep space, as in the real game.
+     Text on it is therefore always light, regardless of the page theme. */
+  .board-chip {
+    background: radial-gradient(120% 120% at 50% 30%, #221E3C, #120F20 72%);
+    border: 2px solid var(--block-border); border-radius: 12px;
+    color: #B6B0CE;
+  }
+  .board-chip .symbol h3 { color: #EFEAF8; }
+  .board-chip .symbol p { color: #B6B0CE; }
+  .board-chip .chip-label { color: #B6B0CE; }
+
+  /* Symbol grid */
+  .symbols { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .symbol { display: flex; gap: 14px; align-items: flex-start; padding: 14px; }
+  .symbol .sw { width: 60px; height: 60px; flex: 0 0 60px; border-radius: 10px; }
+  .symbol h3 { font-size: 15.5px; margin-bottom: 3px; }
+  .symbol p { font-size: 13.5px; color: var(--ink-2); margin: 0; max-width: none; }
+
+  /* Planets */
+  .planets { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 18px; }
+  .planet { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .planet .nm { font-family: var(--font-display); font-weight: 800; font-size: 16px; }
+  .planet .dwell { font-size: 12.5px; color: var(--ink-3); max-width: 20ch; }
+
+  /* Turn steps */
+  .steps { display: flex; flex-direction: column; gap: 14px; }
+  .step { display: flex; gap: 16px; }
+  .step .k {
+    font-family: var(--font-mono); font-weight: 700; font-size: 12px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--gold); flex: 0 0 96px; padding-top: 3px;
+  }
+  .step .v { flex: 1; }
+  .step .v h3 { font-size: 17px; margin-bottom: 3px; }
+  .step .v p { font-size: 15px; color: var(--ink-2); margin: 0; }
+  .formula {
+    font-family: var(--font-mono); font-size: 15px; background: var(--space-2);
+    border: 2px solid var(--block-border); border-radius: 10px; padding: 12px 16px;
+    box-shadow: 3px 3px 0 var(--shadow); display: inline-block; margin-top: 4px;
+    color: var(--ink); font-weight: 700;
+  }
+  .dice { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+
+  /* Callout */
+  .note {
+    border-left: 3px solid var(--gold); padding: 4px 0 4px 16px; color: var(--ink-2);
+    font-size: 15px; margin: 4px 0 0; max-width: 60ch;
+  }
+  .foot { margin-top: 90px; padding-top: 26px; border-top: 2px solid var(--line-mid); color: var(--ink-3); font-family: var(--font-mono); font-size: 12.5px; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+</style>
+
+<div class="hero">
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <div class="eyebrow">Field Guide · v0.3</div>
+    <h1>CROWDED<br><span class="stroke">GALAXY</span></h1>
+    <div class="tag">The galaxy is too small for everyone.</div>
+    <p class="lede">A fast game of area control where you lead a succession of alien civilizations — each one rises across the spiral, overreaches, and collapses into a haunting Remnant while you launch the next. This guide explains every piece on the board.</p>
+    <div class="badge"><span class="dot"></span> 2–5 players · 12 rounds · ~25 min</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <div class="sec-head"><h2>The rhythm of a game</h2><span class="rule"></span></div>
+    <p class="intro">Every civilization you lead travels the same arc. Learning to feel where you are on it — and when to let go — is the whole game.</p>
+    <div class="cycle" id="cycle"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>The spiral</h2><span class="rule"></span></div>
+    <div class="split">
+      <div>
+        <p>The galaxy is <strong>four spiral arms</strong> wound around a dense, heavily defended <strong>core</strong>. New civilizations enter at the <strong>Rim Gates</strong> on the outer frontier and push inward.</p>
+        <p>The core holds most of the <strong>Relics</strong> and is the contested prize — but the arms are corridors, so reaching it means fighting through chokepoints. <strong>Wormholes</strong> (the magenta arcs) are the only fast way across the galaxy, which makes the systems they touch worth fighting for.</p>
+        <p class="note">Arm tips are near dead-ends — one neighbor and one wormhole. Easy to defend, slow to escape.</p>
+      </div>
+      <div class="card board-chip" style="padding:10px;">
+        <svg id="spiral" viewBox="0 0 600 600" style="width:100%;height:auto;display:block" role="img" aria-label="Diagram of the four-arm spiral galaxy"></svg>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Reading the board</h2><span class="rule"></span></div>
+    <p class="intro">Every marker on a system tells you something. Swatches below are drawn exactly as they appear in the game.</p>
+    <div class="card board-chip symbols" id="symbols" style="padding:8px;"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Planet types</h2><span class="rule"></span></div>
+    <p class="intro">Every system is a single planet — one world, one terrain. Each species <em>favors</em> one type and scores <strong>+1 Influence</strong> from each system it controls of that type, so where your species thrives shapes where you expand.</p>
+    <div class="card planets" id="planets"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>A turn, step by step</h2><span class="rule"></span></div>
+    <p class="intro">On your turn you either <strong>Expand</strong> your civilization, or <strong>Collapse</strong> it. An Expand turn runs in four beats:</p>
+    <div class="card">
+      <div class="steps">
+        <div class="step"><div class="k">1 · Recall</div><div class="v"><h3>Gather your strength</h3><p>Pull spare population off your systems back into your hand (leave at least one token everywhere you want to keep). An emptied system is abandoned.</p></div></div>
+        <div class="step"><div class="k">2 · Conquer</div><div class="v"><h3>Take new systems</h3><p>Spend tokens from your hand to seize systems adjacent to your empire — one at a time. A brand-new civilization must make its first conquest at a Rim Gate. The cost of a system is:</p><div class="formula">cost = 2 + defenders + Starbases + Hazard</div></div></div>
+        <div class="step"><div class="k">3 · Redeploy</div><div class="v"><h3>Spread out or dig in</h3><p>Redistribute your surviving population across the systems you hold, at least one token each. Thin borders are cheap to attack; deep stacks are hard to crack.</p></div></div>
+        <div class="step"><div class="k">4 · Score</div><div class="v"><h3>Count your Influence</h3><p>+1 for every system you hold, +1 more for each favored-habitat system, plus whatever your species, trait, and Remnants add. Influence is victory — and also the currency you spend to draft better civilizations.</p></div></div>
+      </div>
+    </div>
+    <div style="margin-top:22px">
+      <h3 style="font-size:20px;margin-bottom:8px">The reinforcement die</h3>
+      <p style="color:var(--ink-2)">On your <strong>final</strong> conquest of a turn, if you're short by one to three tokens, you may gamble: roll the die and add its result to what you committed. Land enough and the system falls; come up short and the assault fails. Either way, your conquering ends there.</p>
+      <div class="dice" id="dice"></div>
+      <p class="note">Faces are 0, 0, 0, 1, 2, 3 — a coin-flip on +1 or better, and a one-in-six shot at a full +3.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Death &amp; rebirth</h2><span class="rule"></span></div>
+    <div class="split">
+      <div>
+        <p>No empire lasts. As you spread, you run out of population to defend what you hold — and that's the moment to <strong>Collapse</strong>.</p>
+        <p>A collapsed civilization leaves one token in each system as a <strong>Remnant Empire</strong>: weaker, frozen in place, but still scoring Influence and still shaping the board. Next turn you draft an entirely new species-and-trait combination and begin again — while your old empires linger, haunting the galaxy.</p>
+        <p class="note">Squeeze one more scoring turn, or collapse now and come back fresh? That decision is the heart of the game.</p>
+      </div>
+      <div class="card board-chip" style="display:flex;align-items:center;justify-content:center;gap:26px;padding:30px 20px;">
+        <div style="text-align:center"><svg width="92" height="92" id="rb-active"></svg><div class="chip-label" style="font-family:var(--font-mono);font-size:12px;margin-top:10px">ACTIVE</div></div>
+        <div style="font-family:var(--font-display);font-size:34px;color:#8B84A8">→</div>
+        <div style="text-align:center"><svg width="92" height="92" id="rb-remnant"></svg><div class="chip-label" style="font-family:var(--font-mono);font-size:12px;margin-top:10px">REMNANT</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Drafting a civilization</h2><span class="rule"></span></div>
+    <p class="intro">Six <strong>Species + Trait</strong> combinations sit in a row. The top one is free; reaching further down costs <strong>1 Influence per combination you skip</strong> — placed on the ones you pass, where a later player can scoop it up. You begin the game with 5 Influence, so the market is a real choice from the very first turn.</p>
+    <div class="split" style="margin-top:20px">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="background:var(--block-border);color:var(--space-0);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-weight:700;font-size:13px"><span>◇ WORMHOLE-SAVVY</span><span>+3 pop</span></div>
+        <div style="padding:14px 16px;font-size:14px;color:var(--ink-2)">The <strong style="color:var(--ink)">Trait</strong> — a random special power. Wormhole conquests cost one less; you may redeploy through wormholes.</div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="background:color-mix(in oklab, var(--pt-ocean) 22%, var(--card));padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-weight:700;font-size:13px"><span>◉ PELAGIC ORACLES</span><span>5 pop</span></div>
+        <div style="padding:14px 16px;font-size:14px;color:var(--ink-2)">The <strong style="color:var(--ink)">Species</strong> — a favored habitat plus an active power and a Remnant power. Ocean habitat; converts lone enemy tokens; its Remnant scores beside opponents.</div>
+      </div>
+    </div>
+    <p style="margin-top:18px;color:var(--ink-2)">Twelve species, twenty traits — the pairings are random, which is where the game's best moments come from: a ridiculous, promising combination you'll ride until it burns out.</p>
+  </section>
+
+  <div class="foot">
+    Crowded Galaxy · Field Guide · generated from the live game data. Mechanics follow Small World; setting, systems, and art are original.
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function el(html) { var t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; }
+
+  /* ---- Hero starfield ---- */
+  var cv = document.getElementById("stars"), ctx = cv.getContext("2d");
+  var stars = [], W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var SPARK = ["#F06AA6", "#54C4D6", "#E6B94E", "#A66FE6"];
+  function seed(n){ return function(){ n = (n*16807) % 2147483647; return n/2147483647; }; }
+  var rnd = seed(20260723);
+  function resize() {
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    stars = [];
+    var count = Math.round(W*H/6500);
+    for (var i=0;i<count;i++) stars.push({ x: rnd()*W, y: rnd()*H, r: rnd()*1.4+.3, o: rnd()*.5+.15, tw: rnd()*Math.PI*2, sp: rnd()*.02+.004, spark: rnd()<.07 });
+  }
+  function draw(t) {
+    ctx.clearRect(0,0,W,H);
+    for (var i=0;i<stars.length;i++) {
+      var s = stars[i];
+      var o = reduce ? s.o : s.o * (0.55 + 0.45*Math.sin(s.tw + t*s.sp));
+      if (s.spark) { ctx.fillStyle = SPARK[i%4]; ctx.globalAlpha = o*.9;
+        var r = s.r*1.9; ctx.beginPath(); ctx.moveTo(s.x, s.y-r*1.7); ctx.lineTo(s.x+r, s.y); ctx.lineTo(s.x, s.y+r*1.7); ctx.lineTo(s.x-r, s.y); ctx.closePath(); ctx.fill();
+      } else { ctx.fillStyle = "#EFEAF8"; ctx.globalAlpha = o; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.29); ctx.fill(); }
+    }
+    ctx.globalAlpha = 1;
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  resize(); window.addEventListener("resize", resize);
+  if (reduce) draw(0); else requestAnimationFrame(draw);
+
+  /* ---- Rhythm cycle ---- */
+  var beats = [
+    ["Discover", "A ridiculous but promising species-and-trait combination lands in your hands."],
+    ["Explode", "You burst onto the map, seizing systems while your population is fresh."],
+    ["Exploit", "You lean into the geography — favored habitats, relics, wormhole shortcuts."],
+    ["Overreach", "The empire runs thin. Every system you hold is a token you can't spend."],
+    ["Decide", "Squeeze one more scoring turn, or collapse now while you're ahead?"],
+    ["Return", "A brand-new civilization rises — while the old one haunts the board."]
+  ];
+  var cyc = document.getElementById("cycle");
+  beats.forEach(function (b, i) {
+    cyc.appendChild(el('<div class="beat card"><div class="num">'+(i+1)+'</div><h3>'+b[0]+'</h3><p>'+b[1]+'</p></div>'));
+  });
+
+  /* ---- Spiral diagram (same geometry family as the real map) ---- */
+  (function () {
+    var svg = document.getElementById("spiral"), NS = "http://www.w3.org/2000/svg", CX = 300, CY = 300;
+    function add(tag, attrs) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; }
+    function at(deg, r) { var a = deg*Math.PI/180; return { x: CX + Math.cos(a)*r, y: CY + Math.sin(a)*r }; }
+    var nodes = {}, lanes = [];
+    nodes.BS = { x: CX, y: CY, core: true };
+    var ringAng = { CN:90, RM:162, CY:234, SO:306, OV:18 };
+    for (var c in ringAng) { var p = at(ringAng[c], 62); nodes[c] = { x:p.x, y:p.y, core:true }; lanes.push(["BS", c]); }
+    ["OV","CN","RM","CY","SO"].forEach(function (c,i,a){ lanes.push([c, a[(i+1)%5]]); });
+    var arms = [["CN",90],["RM",162],["CY",234],["SO",306]];
+    var tips = [];
+    arms.forEach(function (arm, ai) {
+      var prev = arm[0];
+      for (var j=0;j<6;j++) {
+        var p = at(arm[1] + 17*(j+1), 92 + j*34);
+        var code = "A"+ai+"_"+j;
+        nodes[code] = { x:p.x, y:p.y, rim: j>=4, tip: j===5 };
+        lanes.push([prev, code]); prev = code;
+        if (j===5) tips.push(code);
+      }
+    });
+    // wormholes across opposite tips
+    var worms = [[tips[0],tips[2]],[tips[1],tips[3]]];
+    // lanes
+    lanes.forEach(function (l) { var a = nodes[l[0]], b = nodes[l[1]]; add("line", { x1:a.x, y1:a.y, x2:b.x, y2:b.y, stroke:"rgba(239,234,248,.22)", "stroke-width":1.6 }); });
+    worms.forEach(function (w) {
+      var a = nodes[w[0]], b = nodes[w[1]], mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+      var dx=mx-CX, dy=my-CY, len=Math.hypot(dx,dy)||1, qx=mx+dx/len*180, qy=my+dy/len*180;
+      add("path", { d:"M "+a.x+" "+a.y+" Q "+qx+" "+qy+" "+b.x+" "+b.y, fill:"none", stroke:"#F06AA6", "stroke-width":1.8, "stroke-dasharray":"5 5", opacity:.85 });
+    });
+    for (var code in nodes) {
+      var nd = nodes[code];
+      if (nd.rim) add("circle", { cx:nd.x, cy:nd.y, r:11, fill:"none", stroke:"#A9A3C4", "stroke-width":1.2, "stroke-dasharray":"2 3", opacity:.8 });
+      add("circle", { cx:nd.x, cy:nd.y, r:7.5, fill: nd.core ? "#3A2F5E" : "#232045", stroke: nd.core ? "#E6B94E" : "rgba(239,234,248,.3)", "stroke-width": nd.core ? 2 : 1.3 });
+    }
+    add("circle", { cx:CX, cy:CY, r:10, fill:"none", stroke:"#C061DA", "stroke-width":1.6, opacity:.9 });
+  })();
+
+  /* ---- Planet orbs ---- */
+  var ORB = {
+    terran:{hi:"#B8E066",base:"#6FB33C",rim:"#2E6B22",feat:"#3E8A2C"},
+    ocean:{hi:"#7FD4E8",base:"#2E7FC2",rim:"#173E78",feat:"#1C5A9E"},
+    barren:{hi:"#F2CE7E",base:"#D89B44",rim:"#8A5A1E",feat:"#A8712B"},
+    gas_giant:{hi:"#FFD98A",base:"#EFA23F",rim:"#9E5B18",feat:"#C97F2A"},
+    ice:{hi:"#D8F2FF",base:"#6FC4E8",rim:"#2E6FA8",feat:"#3E9ED4"},
+    volcanic:{hi:"#FFA46B",base:"#E85D33",rim:"#8A2412",feat:"#C24222"}
+  };
+  function orb(type, size) {
+    var c = ORB[type], id = "g"+type;
+    var feat = "";
+    if (type==="gas_giant") feat = '<g fill="'+c.feat+'"><rect x="8" y="30" width="84" height="7" rx="3.5" opacity=".85"/><rect x="8" y="46" width="84" height="10" rx="5"/><rect x="8" y="64" width="84" height="6" rx="3" opacity=".7"/></g>';
+    else if (type==="ocean") feat = '<g fill="none" stroke="'+c.feat+'" stroke-width="5" stroke-linecap="round"><path d="M16 40 q12 -10 26 -4 q14 6 26 -2"/><path d="M20 58 q14 -8 28 -1 q12 6 24 0"/></g>';
+    else if (type==="barren") feat = '<g><circle cx="36" cy="38" r="9" fill="'+c.feat+'"/><circle cx="62" cy="54" r="12" fill="'+c.feat+'"/><circle cx="44" cy="68" r="6" fill="'+c.feat+'"/></g>';
+    else if (type==="terran") feat = '<g fill="'+c.feat+'"><path d="M22 34 q10 -8 20 -2 q12 7 4 14 q-14 8 -24 0 q-6 -6 0 -12Z"/><path d="M56 58 q14 -6 22 4 q6 9 -4 13 q-14 5 -22 -4 q-5 -8 4 -13Z"/></g>';
+    else if (type==="ice") feat = '<g fill="'+c.feat+'" opacity=".85"><path d="M50 14 L64 40 L50 52 L36 40 Z"/><path d="M30 48 L50 52 L44 76 L26 66 Z" opacity=".8"/></g>';
+    else feat = '<path d="M50 50 m0 -26 a26 26 0 1 1 -18 44 a19 19 0 1 0 12 -34 a12 12 0 1 0 6 22 a6 6 0 1 1 0 -12" fill="'+c.feat+'"/>';
+    var ring = (type==="gas_giant"||type==="terran") ? '<ellipse cx="50" cy="50" rx="49" ry="13" fill="none" stroke="'+c.feat+'" stroke-width="3.5" transform="rotate(-18 50 50)" opacity=".9"/>' : '';
+    return '<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" style="overflow:visible"><defs><radialGradient id="'+id+'" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="'+c.hi+'"/><stop offset="55%" stop-color="'+c.base+'"/><stop offset="100%" stop-color="'+c.rim+'"/></radialGradient><clipPath id="cl'+type+'"><circle cx="50" cy="50" r="36"/></clipPath></defs>'+ring+'<circle cx="50" cy="50" r="36" fill="url(#'+id+')"/><g clip-path="url(#cl'+type+')">'+feat+'<ellipse cx="50" cy="76" rx="34" ry="14" fill="'+c.rim+'" opacity=".35"/></g><ellipse cx="37" cy="30" rx="12" ry="7" fill="#fff" opacity=".4" transform="rotate(-24 37 30)"/></svg>';
+  }
+  var plData = [["terran","Terran","Biological generalists, fungal networks"],["ocean","Ocean","Aquatic and amphibious life"],["barren","Barren","Machines, miners, silicon life"],["gas_giant","Gas Giant","Floaters, atmospheric megafauna"],["ice","Ice","Cryogenic and ammonia-based life"],["volcanic","Volcanic","Thermophiles, magma-forged species"]];
+  var pl = document.getElementById("planets");
+  plData.forEach(function (d) { pl.appendChild(el('<div class="planet">'+orb(d[0],72)+'<div class="nm">'+d[1]+'</div><div class="dwell">'+d[2]+'</div></div>')); });
+
+  /* ---- Map symbol swatches (drawn as in game) ---- */
+  function node(extra, fill, stroke, sw) { return '<circle cx="30" cy="30" r="16" fill="'+(fill||"#232045")+'" stroke="'+(stroke||"rgba(239,234,248,.28)")+'" stroke-width="'+(sw||1.5)+'"/>'+(extra||""); }
+  function sw(inner) { return '<svg class="sw" viewBox="0 0 60 60">'+inner+'</svg>'; }
+  var SY = [
+    [sw(node('<circle cx="30" cy="30" r="22" fill="none" stroke="#A9A3C4" stroke-width="1.5" stroke-dasharray="2 4" opacity=".8"/>')), "Rim Gate", "A faint dashed ring. New civilizations must make their first conquest here — they sit on the arm tips of the frontier."],
+    [sw(node('<circle cx="30" cy="30" r="20" fill="none" stroke="#54C4D6" stroke-width="2.5" stroke-dasharray="4 4" opacity=".9"/>')), "Reachable now", "A brighter teal ring marks a system you can conquer this turn. It follows your borders as they move."],
+    [sw(node()+'<circle cx="44" cy="44" r="9" fill="#54C4D6" stroke="#120F20" stroke-width="1.5"/><text x="44" y="48" text-anchor="middle" fill="#171420" style="font:700 10px monospace">3</text>'), "Conquest cost", "The teal bubble is what it costs to take the system right now — defenders, Hazard and Starbases included, after your discounts."],
+    [sw(node()+'<circle cx="46" cy="16" r="9" fill="#9A917C" stroke="#120F20" stroke-width="1.5"/><text x="46" y="20" text-anchor="middle" fill="#120F20" style="font:700 10px monospace">2</text>'), "Token count", "Top-right badge: population in the system. Grey = neutral defenders; a player color = their population."],
+    [sw('<circle cx="30" cy="30" r="16" fill="#232045" stroke="#E4564A" stroke-width="3" style="filter:drop-shadow(0 0 5px #E4564A)"/>'), "Active empire", "A solid, glowing colored ring: a system held by a living civilization."],
+    [sw(node('<circle cx="30" cy="30" r="16" fill="none" stroke="#A66FE6" stroke-width="3" stroke-dasharray="3 3"/>')), "Remnant Empire", "A dashed colored ring: the remains of a collapsed civilization, still scoring and defending."],
+    [sw(node()+'<circle cx="16" cy="16" r="8" fill="#F0673A" stroke="#120F20" stroke-width="1.5"/><text x="16" y="20" text-anchor="middle" fill="#EFEAF8" style="font:700 10px monospace">!</text>'), "Hazard", "A red exclamation: +1 to the system's conquest cost. Some abilities ignore it."],
+    [sw(node()+'<text x="16" y="46" text-anchor="middle" fill="#C061DA" style="font:16px monospace;filter:drop-shadow(0 0 4px #C061DA)">✦</text>'), "Relic", "A glowing star. The Ancient trait scores an Influence for each Relic you hold. Most sit in the core."],
+    [sw(node()+'<circle cx="44" cy="44" r="5" fill="none" stroke="#F06AA6" stroke-width="2" style="filter:drop-shadow(0 0 4px #F06AA6)"/>'), "Wormhole", "A glowing endpoint, linked to its pair by a magenta arc. The two systems count as adjacent for everything."],
+    [sw(node()+'<text x="44" y="52" text-anchor="middle" fill="#B6B0CE" style="font:700 10px monospace">▲2</text>'), "Starbase", "Built by Fortress-Building. Each adds +1 defense and +1 Influence while the civilization lives."],
+    [sw(node('<circle cx="30" cy="30" r="24" fill="none" stroke="#EFEAF8" stroke-width="2" opacity=".9"/>')), "Bulwark", "The Heroic trait's shield. A system with a Bulwark simply cannot be conquered."]
+  ];
+  var sym = document.getElementById("symbols");
+  SY.forEach(function (s) { sym.appendChild(el('<div class="symbol">'+s[0]+'<div><h3>'+s[1]+'</h3><p>'+s[2]+'</p></div></div>')); });
+
+  /* ---- Reinforcement die faces ---- */
+  var PIPS = { 0:[], 1:[[50,50]], 2:[[30,30],[70,70]], 3:[[28,28],[50,50],[72,72]] };
+  function die(v) {
+    var pips = PIPS[v].map(function (p){ return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="7" fill="#EFEAF8"/>'; }).join("");
+    return '<div style="text-align:center"><svg viewBox="0 0 100 100" width="48" height="48" style="background:#1E1B33;border:2px solid var(--block-border);border-radius:14px;box-shadow:3px 3px 0 var(--shadow)">'+pips+'</svg><div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-top:6px">'+(v===0?"miss":"+"+v)+'</div></div>';
+  }
+  var dc = document.getElementById("dice");
+  [0,0,0,1,2,3].forEach(function (v){ dc.appendChild(el(die(v))); });
+
+  /* ---- Active vs Remnant illustration ---- */
+  document.getElementById("rb-active").innerHTML = '<circle cx="46" cy="46" r="26" fill="#232045" stroke="#54C4D6" stroke-width="4" style="filter:drop-shadow(0 0 7px #54C4D6)"/><circle cx="62" cy="30" r="13" fill="#54C4D6" stroke="#120F20" stroke-width="2.5"/><text x="62" y="35" text-anchor="middle" fill="#120F20" style="font:700 13px monospace">4</text>';
+  document.getElementById("rb-remnant").innerHTML = '<circle cx="46" cy="46" r="26" fill="none" stroke="#54C4D6" stroke-width="4" stroke-dasharray="5 5"/><circle cx="62" cy="30" r="13" fill="#120F20" stroke="#54C4D6" stroke-width="2.5"/><text x="62" y="35" text-anchor="middle" fill="#54C4D6" style="font:700 13px monospace">1</text>';
+})();
+</script>
+</body></html>

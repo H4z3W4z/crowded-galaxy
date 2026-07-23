@@ -158,21 +158,59 @@ function Players({ game }: { game: ReturnType<typeof useStore.getState>["game"] 
 
 function CivPanel({ game }: { game: NonNullable<ReturnType<typeof useStore.getState>["game"]> }) {
   const p = game.players[game.current]!;
+  const [detail, setDetail] = useState(false);
   if (!p.active) return null;
   const sp = SPECIES[p.active.species]!;
   const tr = TRAITS[p.active.trait]!;
   return (
-    <div style={{ display: "flex", gap: 8 }}>
-      <SpeciesCard species={sp} compact width={200} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-        <TraitCard trait={tr} compact width="100%" />
-        <Panel surface="inset" pad="10px">
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>
-            Hand: <b style={{ fontSize: 17 }}>{p.active.hand}</b> tokens
+    <>
+      <div style={{ display: "flex", gap: 8 }}>
+        <div role="button" tabIndex={0} onClick={() => setDetail(true)} onKeyDown={(e) => e.key === "Enter" && setDetail(true)} style={{ cursor: "pointer", position: "relative" }} title="Tap for full abilities">
+          <SpeciesCard species={sp} compact width={200} />
+          <InfoDot />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+          <div role="button" tabIndex={0} onClick={() => setDetail(true)} onKeyDown={(e) => e.key === "Enter" && setDetail(true)} style={{ cursor: "pointer", position: "relative" }} title="Tap for full abilities">
+            <TraitCard trait={tr} compact width="100%" />
+            <InfoDot />
           </div>
-          <div style={{ color: "var(--ink-3)", fontSize: 12 }}>Turn {p.active.turnsActive + 1} of this civilization</div>
-        </Panel>
+          <Panel surface="inset" pad="10px">
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>
+              Hand: <b style={{ fontSize: 17 }}>{p.active.hand}</b> tokens
+            </div>
+            <div style={{ color: "var(--ink-3)", fontSize: 12 }}>Turn {p.active.turnsActive + 1} of this civilization</div>
+          </Panel>
+        </div>
       </div>
+      {detail && <CivDetail sp={sp} tr={tr} onClose={() => setDetail(false)} />}
+    </>
+  );
+}
+
+function InfoDot() {
+  return (
+    <span style={{ position: "absolute", top: 6, right: 6, width: 18, height: 18, borderRadius: "50%", background: "var(--card)", border: "1.5px solid var(--line-mid)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 12, color: "var(--ink-2)" }}>
+      i
+    </span>
+  );
+}
+
+function CivDetail({ sp, tr, onClose }: { sp: { name: string; active: string; remnant: string; habitat: string }; tr: { name: string; ability: string }; onClose: () => void }) {
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(7,6,18,.72)", zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <Panel surface="paper" onClick={(e: React.MouseEvent) => e.stopPropagation()} style={{ width: 560, maxWidth: "96vw", maxHeight: "92vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
+          <h2 style={{ fontSize: "var(--display-sm)", flex: 1 }}>Your civilization</h2>
+          <Button variant="ghost" size="sm" icon="x" onClick={onClose} />
+        </div>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <SpeciesCard species={sp} width={270} />
+          <TraitCard trait={tr} width={240} />
+        </div>
+        <div style={{ marginTop: 14, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.5 }}>
+          <strong>{sp.name}</strong> favors <strong>{(PLANET_TYPES as Record<string, { label: string }>)[sp.habitat]?.label ?? sp.habitat}</strong> worlds — it scores +1 Influence from each system of that type it controls. Its <strong>Active</strong> power works while it lives; its <strong>Remnant</strong> power takes over once it collapses. The <strong>{tr.name}</strong> trait applies for this civilization's whole life.
+        </div>
+      </Panel>
     </div>
   );
 }

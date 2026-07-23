@@ -39,16 +39,59 @@ interface Store {
   reset: () => void;
 }
 
+// --- Persistence: survive a tab reload (iOS discards backgrounded tabs). ---
+const PERSIST_KEY = "cg-state-v2";
+
+interface Persisted {
+  screen: Screen;
+  mode: "local" | "online";
+  onlineGameId: string | null;
+  mySeat: number | null;
+  game: GameState | null; // local mode only; online is re-fetched from the server
+  history: GameState[];
+}
+
+function loadPersisted(): Partial<Persisted> {
+  try {
+    const raw = localStorage.getItem(PERSIST_KEY);
+    if (!raw) return {};
+    const p = JSON.parse(raw) as Persisted;
+    // Don't restore a "game" screen with no game to show.
+    if (p.screen === "game" && p.mode === "local" && !p.game) p.screen = "home";
+    return p;
+  } catch {
+    return {};
+  }
+}
+
+function savePersisted(s: Store): void {
+  try {
+    const snapshot: Persisted = {
+      screen: s.screen,
+      mode: s.mode,
+      onlineGameId: s.onlineGameId,
+      mySeat: s.mySeat,
+      game: s.mode === "local" ? s.game : null, // online state is authoritative on the server
+      history: s.mode === "local" ? s.history.slice(-8) : [],
+    };
+    localStorage.setItem(PERSIST_KEY, JSON.stringify(snapshot));
+  } catch {
+    /* storage full or unavailable — non-fatal */
+  }
+}
+
+const saved = loadPersisted();
+
 export const useStore = create<Store>((set, get) => ({
-  screen: "home",
+  screen: saved.screen ?? "home",
   me: null,
-  game: null,
-  history: [],
+  game: saved.mode === "local" ? (saved.game ?? null) : null,
+  history: saved.mode === "local" ? (saved.history ?? []) : [],
   error: null,
   selected: null,
-  mode: "local",
-  onlineGameId: null,
-  mySeat: null,
+  mode: saved.mode ?? "local",
+  onlineGameId: saved.onlineGameId ?? null,
+  mySeat: saved.mySeat ?? null,
   lobbyTableId: null,
   closeSocket: null,
   conn: "connecting",
@@ -150,3 +193,6 @@ export const useStore = create<Store>((set, get) => ({
     set({ game: null, history: [], error: null, selected: null, screen: "home" });
   },
 }));
+
+// Persist the relevant slice on every change so a reload restores the game.
+useStore.subscribe(savePersisted);

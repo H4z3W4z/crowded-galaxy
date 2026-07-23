@@ -11,11 +11,19 @@ export function App() {
   const setMe = useStore((s) => s.setMe);
   const inProgress = game !== null && game.phase !== "over";
 
-  // Restore the signed-in user (cookie session) on load.
+  // Restore the signed-in user (cookie session) on load, and reconnect a
+  // persisted online game once auth is confirmed. (Local games restore from
+  // localStorage directly in the store.)
   useEffect(() => {
     api
       .me()
-      .then(({ user }) => setMe(user))
+      .then(({ user }) => {
+        setMe(user);
+        const st = useStore.getState();
+        if (user && st.mode === "online" && st.onlineGameId && !st.closeSocket) {
+          void st.openOnlineGame(st.onlineGameId).catch(() => {});
+        }
+      })
       .catch(() => setMe(null));
   }, [setMe]);
 

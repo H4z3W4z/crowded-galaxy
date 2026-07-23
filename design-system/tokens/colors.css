@@ -1,0 +1,28 @@
+:root{
+/* Surface ramp — deep-space panels (inverted from the original cream print stock) */
+--paper-0:#131120;--paper-1:#1C1930;--paper-2:#272343;--paper-3:#332E55;
+--card:#1E1B33;
+/* "Ink" is now light — text & borders on dark surfaces */
+--ink:#EFEAF8;--ink-2:#B6B0CE;--ink-3:#8B84A8;
+--line:rgba(239,234,248,.13);--line-mid:rgba(239,234,248,.3);--line-strong:var(--ink);
+/* Dark text for saturated accent fills (gold buttons, token counts) */
+--on-accent:#171420;
+/* Space — page ground & map window */
+--space-0:#131120;--space-1:#1C1930;--space-2:#272343;
+--starlight:#EFEAF8;--starlight-2:#A9A3C4;--space-line:rgba(239,234,248,.14);
+/* Player colors — vivid, shared chroma/lightness family; -deep = readable text on dark */
+--p1:oklch(62% 0.19 30);--p2:oklch(75% 0.14 85);--p3:oklch(64% 0.12 195);--p4:oklch(58% 0.16 305);--p5:oklch(65% 0.15 145);
+--p1-deep:oklch(75% 0.15 30);--p2-deep:oklch(85% 0.12 85);--p3-deep:oklch(78% 0.1 195);--p4-deep:oklch(76% 0.12 305);--p5-deep:oklch(79% 0.12 145);
+--neutral-token:#9A917C;
+/* Planet types */
+--pt-terran:oklch(60% 0.14 140);--pt-ocean:oklch(58% 0.13 245);--pt-barren:oklch(60% 0.07 70);--pt-gas-giant:oklch(72% 0.13 55);--pt-ice:oklch(75% 0.09 215);--pt-volcanic:oklch(56% 0.18 30);
+--pt-terran-tint:color-mix(in oklab,var(--pt-terran) 22%,var(--paper-1));--pt-ocean-tint:color-mix(in oklab,var(--pt-ocean) 22%,var(--paper-1));--pt-barren-tint:color-mix(in oklab,var(--pt-barren) 24%,var(--paper-1));--pt-gas-giant-tint:color-mix(in oklab,var(--pt-gas-giant) 24%,var(--paper-1));--pt-ice-tint:color-mix(in oklab,var(--pt-ice) 26%,var(--paper-1));--pt-volcanic-tint:color-mix(in oklab,var(--pt-volcanic) 22%,var(--paper-1));
+/* Game semantics */
+--influence:oklch(68% 0.13 80);--influence-deep:oklch(80% 0.12 80);
+--hazard:var(--pt-volcanic);--relic:oklch(58% 0.17 320);--wormhole:oklch(65% 0.19 340);--rimgate:var(--ink-2);
+--positive:var(--pt-terran);--danger:var(--pt-volcanic);
+/* Aliases */
+--surface-page:var(--space-0);--surface-card:var(--card);--surface-inset:var(--paper-1);--surface-space:var(--space-0);
+--text-body:var(--ink);--text-muted:var(--ink-2);--text-faint:var(--ink-3);
+--focus-ring:var(--p3);
+}

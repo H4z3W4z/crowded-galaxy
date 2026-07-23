@@ -1,0 +1,23 @@
+/* Interactive recipes shared by components (hover/press need real CSS) */
+.cg-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font-display);font-weight:700;letter-spacing:.01em;border:var(--bw) solid var(--ink);border-radius:var(--r-md);box-shadow:var(--shadow-chunk);cursor:pointer;transition:transform var(--dur-fast) var(--ease-snap),box-shadow var(--dur-fast) var(--ease-snap),background var(--dur-fast);user-select:none;text-decoration:none;white-space:nowrap}
+.cg-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shadow-color)}
+.cg-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow-color)}
+.cg-btn:disabled{opacity:.4;pointer-events:none;box-shadow:none}
+.cg-btn--primary{background:var(--ink);color:var(--paper-0)}
+.cg-btn--primary:hover{background:color-mix(in oklab,var(--ink) 88%,var(--space-0))}
+.cg-btn--secondary{background:var(--card);color:var(--ink)}
+.cg-btn--secondary:hover{background:var(--paper-1)}
+.cg-btn--gold{background:var(--influence);color:var(--on-accent)}
+.cg-btn--gold:hover{background:color-mix(in oklab,var(--influence) 88%,white)}
+.cg-btn--danger{background:var(--pt-volcanic);color:var(--paper-0)}
+.cg-btn--ghost{background:transparent;border-color:transparent;box-shadow:none;color:var(--ink)}
+.cg-btn--ghost:hover{background:var(--paper-1);transform:none;box-shadow:none}
+.cg-btn--ghost:active{transform:none;box-shadow:none}
+.cg-btn--sm{height:36px;padding:0 14px;font-size:14px}
+.cg-btn--md{height:44px;padding:0 20px;font-size:15px}
+.cg-btn--lg{height:54px;padding:0 26px;font-size:17px}
+.cg-iconbtn{padding:0}
+.cg-iconbtn.cg-btn--sm{width:36px}.cg-iconbtn.cg-btn--md{width:44px}.cg-iconbtn.cg-btn--lg{width:54px}
+.cg-input{height:44px;padding:0 14px;font-family:var(--font-body);font-size:var(--text-md);color:var(--ink);background:var(--card);border:var(--bw) solid var(--ink);border-radius:var(--r-md);box-shadow:var(--shadow-chunk-sm);outline:none;transition:box-shadow var(--dur-fast)}
+.cg-input::placeholder{color:var(--ink-3)}
+.cg-input:focus{box-shadow:2px 2px 0 var(--shadow-color),0 0 0 3px color-mix(in oklab,var(--focus-ring) 40%,transparent)}

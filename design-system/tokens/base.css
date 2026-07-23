@@ -1,0 +1,6 @@
+body{font-family:var(--font-body);color:var(--starlight);font-size:var(--text-md);line-height:var(--leading-body);margin:0;background-color:var(--space-0);background-image:radial-gradient(1100px 700px at 75% -10%,rgba(101,86,183,.16),transparent 60%),radial-gradient(1.4px 1.4px at 12% 22%,rgba(239,234,248,.9) 50%,transparent 51%),radial-gradient(1px 1px at 62% 70%,rgba(239,234,248,.7) 50%,transparent 51%),radial-gradient(1.8px 1.8px at 85% 40%,rgba(239,234,248,.8) 50%,transparent 51%),radial-gradient(1px 1px at 35% 85%,rgba(239,234,248,.55) 50%,transparent 51%);background-size:auto,190px 190px,240px 240px,330px 330px,280px 280px}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:var(--leading-tight);margin:0}
+a{color:var(--p3);text-decoration-thickness:2px;text-underline-offset:2px}
+a:hover{color:var(--starlight)}
+::selection{background:var(--p2);color:var(--on-accent)}
+:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}

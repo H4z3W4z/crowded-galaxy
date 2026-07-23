@@ -1,0 +1,14 @@
+{
+  "name": "crowded-galaxy",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "gen": "node scripts/gen-data.mjs",
+    "test": "pnpm -r test",
+    "dev": "pnpm --filter @cg/web dev",
+    "build": "pnpm -r build"
+  },
+  "devDependencies": {
+    "yaml": "^2.4.5"
+  }
+}

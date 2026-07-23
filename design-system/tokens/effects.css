@@ -1,0 +1,9 @@
+:root{
+/* Hard offset print-block shadows — near-black, deeper than the panels */
+--shadow-color:#070612;
+--shadow-chunk-sm:2px 2px 0 var(--shadow-color);--shadow-chunk:3px 3px 0 var(--shadow-color);--shadow-pop:5px 5px 0 var(--shadow-color);
+--shadow-soft:0 2px 14px rgba(0,0,0,.45);
+--glow-worm:0 0 10px var(--wormhole);--glow-star:0 0 14px rgba(239,234,248,.5);
+--ease-snap:cubic-bezier(.2,.9,.3,1.2);/* @kind other */--ease-out:cubic-bezier(.2,.7,.3,1);/* @kind other */
+--dur-fast:120ms;/* @kind other */--dur-med:220ms;/* @kind other */
+}

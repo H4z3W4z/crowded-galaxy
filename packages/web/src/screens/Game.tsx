@@ -14,6 +14,7 @@ import {
 } from "@cg/engine";
 import { useStore } from "../store";
 import { MapView } from "../components/MapView";
+import { LegendButton } from "../components/Legend";
 import { Button } from "@ds/components/core/Button.jsx";
 import { Panel } from "@ds/components/core/Panel.jsx";
 import { Badge } from "@ds/components/core/Badge.jsx";
@@ -80,6 +81,7 @@ export function Game() {
     <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
         <MapView game={game} selected={selected} reachable={reachable} onSelect={(id) => select(selected === id ? null : id)} />
+        <LegendButton />
         {mode === "online" && <ConnBadge />}
         {error && (
           <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", background: "var(--pt-volcanic)", color: "var(--paper-0)", border: "var(--bw) solid var(--ink)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-chunk)", padding: "10px 18px", fontFamily: "var(--font-display)", fontWeight: 700 }}>
@@ -197,15 +199,32 @@ function PhaseControls({
       <Panel surface="inset" pad="12px">
         <ActionTitle>Begin your turn</ActionTitle>
         <Row>
-          <Button variant="gold" size="sm" icon="rocket" onClick={() => dispatch({ type: "recall", take: recallAllSpare(game) })}>
+          <Button
+            variant="gold"
+            size="sm"
+            icon="rocket"
+            title="Pull spare tokens off your systems (leaving 1 each) back into hand, then conquer."
+            onClick={() => dispatch({ type: "recall", take: recallAllSpare(game) })}
+          >
             Recall spare & expand
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => dispatch({ type: "recall", take: {} })}>
+          <Button
+            variant="secondary"
+            size="sm"
+            title="Keep every token where it is and go straight to conquering."
+            onClick={() => dispatch({ type: "recall", take: {} })}
+          >
             Expand without recall
           </Button>
         </Row>
         <Row style={{ marginTop: 8 }}>
-          <Button variant="danger" size="sm" icon="skull" onClick={() => dispatch({ type: "collapse" })}>
+          <Button
+            variant="danger"
+            size="sm"
+            icon="skull"
+            title="End this civilization. It leaves 1 token per system as a Remnant Empire that keeps scoring, and next turn you launch a new civilization."
+            onClick={() => dispatch({ type: "collapse" })}
+          >
             Collapse into Remnant
           </Button>
         </Row>
@@ -247,7 +266,13 @@ function PhaseControls({
                 </Button>
               )}
               {short >= 1 && short <= 3 && civ && civ.hand >= 1 && !game.turn.finalConquestUsed && (
-                <Button variant="danger" size="sm" icon="dices" onClick={() => dispatch({ type: "finalConquest", target: sel })}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon="dices"
+                  title="You're short by up to 3. Roll the reinforcement die (faces 0,0,0,1,2,3) — if the roll covers the gap, you take it. This is your last conquest either way."
+                  onClick={() => dispatch({ type: "finalConquest", target: sel })}
+                >
                   Gamble the die (short {short})
                 </Button>
               )}

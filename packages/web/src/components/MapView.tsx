@@ -67,8 +67,25 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
         const isRemnant = occ?.kind === "remnant";
         const count = occ ? sys.tokens : sys.neutrals;
         const n = def.planets.length;
+        const tipLines = [
+          `${def.name} (${code})`,
+          `Planets: ${def.planets.map((p) => p.replace("_", " ")).join(", ")}`,
+          ...(def.rimGate ? ["Rim Gate — new civilizations may enter here"] : []),
+          ...(def.hazard ? ["Hazard — +1 to conquer"] : []),
+          ...(def.relic ? ["Relic — some Traits score it"] : []),
+          ...(wormSet.has(code) ? ["Wormhole endpoint — counts as adjacent to its pair"] : []),
+          occ
+            ? `${game.config.seats[occ.player]!.name}: ${sys.tokens} population${isRemnant ? " (Remnant)" : ""}`
+            : sys.neutrals > 0
+              ? `${sys.neutrals} neutral defender${sys.neutrals === 1 ? "" : "s"}`
+              : "Unclaimed",
+          ...(sys.starbases > 0 ? [`${sys.starbases} Starbase (+1 defense each)`] : []),
+          ...(sys.bulwark ? ["Bulwark — cannot be conquered"] : []),
+          ...(cost !== undefined ? [`You can conquer this now for ${cost}`] : []),
+        ];
         return (
           <g key={code} onClick={() => onSelect(code)} style={{ cursor: "pointer" }}>
+            <title>{tipLines.join("\n")}</title>
             {def.rimGate && <circle cx={pos.x} cy={pos.y} r={37} fill="none" stroke="var(--starlight-2)" strokeWidth={1.5} strokeDasharray="3 6" opacity={0.7} />}
             {canReach && !isSel && <circle cx={pos.x} cy={pos.y} r={33} fill="none" stroke="var(--p3)" strokeWidth={2.5} strokeDasharray="5 5" opacity={0.9} />}
             <circle

@@ -134,7 +134,7 @@ export const TRAITS: Record<string, TraitDef> = {
   "berserk": {
     "id": "berserk",
     "name": "Berserk",
-    "population": 4,
+    "population": 5,
     "ability": "Roll the reinforcement die BEFORE each conquest and apply the result as a discount to that conquest's cost, minimum 1."
   },
   "colonizing": {

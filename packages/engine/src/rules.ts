@@ -52,9 +52,20 @@ function traitOf(g: GameState, player: PlayerId): string | null {
 /** Systems a conquest by `player`'s active civ may originate from. */
 function originSystems(g: GameState, player: PlayerId): SystemId[] {
   const own = systemsOf(g, player, "active");
-  // Concord of Many: active empire may expand through / launch from its own Remnant systems.
+  // Concord of Many, active side: expand through / launch from ALL own Remnant systems.
   if (speciesOf(g, player) === "concord_of_many") {
     return own.concat(systemsOf(g, player, "remnant"));
+  }
+  // Concord of Many, Remnant side: its systems serve the (different) active empire as origins.
+  const p = g.players[player]!;
+  const concordIdx = p.remnants.findIndex((r) => r.species === "concord_of_many");
+  if (concordIdx !== -1) {
+    return own.concat(
+      SYSTEM_IDS.filter((id) => {
+        const occ = g.systems[id]!.occupant;
+        return occ?.player === player && occ.kind === "remnant" && occ.remnantIdx === concordIdx;
+      }),
+    );
   }
   return own;
 }
@@ -127,7 +138,13 @@ export function conquestCost(g: GameState, player: PlayerId, target: SystemId, v
     if (rem?.species === "heliox_aerostats") defenderTokens *= 2;
   }
 
-  let cost = 2 + defenderTokens + sys.starbases + (def.hazard ? 1 : 0);
+  // "Ignore" effects zero the charge instead of discounting it, so stacked ignores
+  // (Magmaforged + Stealth) cannot double-dip a single Hazard into a net discount.
+  const ignoreHazard = civ.species === "magmaforged" || civ.trait === "stealth";
+  const hazardCharge = def.hazard && !ignoreHazard ? 1 : 0;
+  const starbaseCharge = civ.trait === "stealth" ? 0 : sys.starbases;
+
+  let cost = 2 + defenderTokens + starbaseCharge + hazardCharge;
 
   // Defender bonuses.
   if (occ) {
@@ -139,15 +156,13 @@ export function conquestCost(g: GameState, player: PlayerId, target: SystemId, v
     if (occ.kind === "remnant" && defSpecies === "magmaforged" && def.hazard) cost += 1;
   }
 
-  // Attacker discounts / ignores.
+  // Attacker discounts.
   const empty = !occ && sys.neutrals === 0;
   if (civ.species === "thalassi_compact" && hasPlanet(target, "ocean")) cost -= 1;
   if (civ.species === "heliox_aerostats" && hasPlanet(target, "gas_giant")) cost -= 1;
-  if (civ.species === "magmaforged" && def.hazard) cost -= 1; // ignores the hazard it was charged
   if (civ.trait === "aggressive") cost -= 1;
   if (civ.trait === "colonizing" && empty) cost -= 1;
   if (civ.trait === "wormhole_savvy" && viaWormhole) cost -= 1;
-  if (civ.trait === "stealth") cost -= sys.starbases + (def.hazard ? 1 : 0);
 
   return Math.max(1, cost);
 }
@@ -172,6 +187,10 @@ export function checkRemnantConquest(g: GameState, player: PlayerId, target: Sys
   if (sys.bulwark) return illegal("protected by a Bulwark");
   const occ = sys.occupant;
   if (occ && occ.player === player) return illegal("cannot attack your own systems");
+  // The Diplomatic pact binds the whole player, marching Remnants included.
+  if (occ && occ.kind === "active" && g.players[occ.player]!.diplomaticTarget === player) {
+    return illegal("blocked by Diplomatic pact");
+  }
   const remSystems = SYSTEM_IDS.filter((id) => {
     const o = g.systems[id]!.occupant;
     return o?.player === player && o.kind === "remnant" && o.remnantIdx === idx;
@@ -219,6 +238,8 @@ export function conversionTargets(g: GameState, player: PlayerId): SystemId[] {
     const sys = g.systems[id]!;
     const occ = sys.occupant;
     if (!occ || occ.kind !== "active" || occ.player === player || sys.tokens !== 1) continue;
+    if (sys.bulwark) continue; // Bulwarks stop conversion, not just conquest
+    if (g.players[occ.player]!.diplomaticTarget === player) continue; // pact covers conversion
     if (g.turn.conversionsUsed.includes(occ.player)) continue;
     if ([...neighbors(id)].some((n) => own.has(n))) out.push(id);
   }

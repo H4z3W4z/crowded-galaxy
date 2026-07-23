@@ -16,8 +16,8 @@ export function scoreExpandTurn(g: GameState, player: PlayerId): ScoreLine[] {
   const civ = p.active;
   const active = systemsOf(g, player, "active");
 
-  if (civ && active.length > 0) {
-    lines.push({ label: "Active systems", amount: active.length });
+  if (civ) {
+    if (active.length > 0) lines.push({ label: "Active systems", amount: active.length });
 
     const habs = favoredHabitats(g, player);
     const habCount = active.filter((id) => habs.some((h) => hasPlanet(id, h))).length;
@@ -48,7 +48,7 @@ export function scoreExpandTurn(g: GameState, player: PlayerId): ScoreLine[] {
         break;
       }
       case "mercantile":
-        lines.push({ label: "Mercantile", amount: active.length });
+        if (active.length > 0) lines.push({ label: "Mercantile", amount: active.length });
         break;
       case "parasitic": {
         const n = g.turn.conquests.filter((c) => c.wasNonEmpty).length;

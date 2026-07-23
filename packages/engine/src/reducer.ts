@@ -3,7 +3,7 @@
 
 import { SPECIES, TRAITS } from "./gen/cards.js";
 import { SYSTEMS, SYSTEM_IDS } from "./gen/map.js";
-import { nextInt } from "./rng.js";
+import { nextInt, shuffle } from "./rng.js";
 import {
   checkConquest,
   checkRemnantConquest,
@@ -34,6 +34,8 @@ export function apply(state: GameState, action: Action): GameState {
       for (let i = 0; i < slot; i++) g.market[i]!.influence += 1;
       const combo = g.market.splice(slot, 1)[0]!;
       p.influence += combo.influence;
+      if (slot > 0) log(g, `pays ${slot} Influence to skip ${slot} combo${slot === 1 ? "" : "s"}`);
+      if (combo.influence > 0) log(g, `collects ${combo.influence} Influence banked on the combo`);
       refillMarket(g);
       p.active = {
         species: combo.species,
@@ -57,7 +59,9 @@ export function apply(state: GameState, action: Action): GameState {
       if (g.phase === "post") {
         if (p.active?.trait !== "twilight") throw new RulesError("only Twilight collapses at end of turn");
         scoreEndOfTurn(g, player);
-        collapseCiv(g, player, false); // expand turn already scored — no second scoring
+        // Per rules 6.B, every collapse scores its surviving Remnant systems — Twilight
+        // only changes the timing, not the payout.
+        collapseCiv(g, player, true);
         finishTurn(g);
         return g;
       }
@@ -87,6 +91,7 @@ export function apply(state: GameState, action: Action): GameState {
     case "chooseAdaptiveHabitat": {
       requirePhase(g, "conquer");
       if (p.active?.trait !== "adaptive") throw new RulesError("not Adaptive");
+      if (g.turn.adaptiveHabitat !== null) throw new RulesError("second habitat already chosen this turn");
       g.turn.adaptiveHabitat = action.habitat;
       return g;
     }
@@ -160,6 +165,7 @@ export function apply(state: GameState, action: Action): GameState {
       if (!targets.includes(action.target)) throw new RulesError("not a legal conversion target");
       const sys = g.systems[action.target]!;
       const victim = sys.occupant!.player;
+      removeCivMarkers(g, action.target); // the victim's Starbases/Bulwark do not change hands
       sys.occupant = { player, kind: "active", remnantIdx: -1 };
       sys.tokens = 1; // replaced from the supply; victim's token is removed from the game
       g.turn.conversionsUsed.push(victim);
@@ -242,17 +248,23 @@ export function apply(state: GameState, action: Action): GameState {
       if (total >= 6) throw new RulesError("maximum six Starbases");
       g.systems[action.system]!.starbases += 1;
       g.turn.starbasePlaced = true;
+      log(g, `builds a Starbase at ${SYSTEMS[action.system]!.name}`);
       return g;
     }
 
     case "moveBulwarks": {
       requirePhase(g, "post");
       if (p.active?.trait !== "heroic") throw new RulesError("not Heroic");
+      if (g.turn.bulwarksMoved) throw new RulesError("Bulwarks already placed this turn");
       if (action.systems.length > 2) throw new RulesError("two Bulwark markers");
       const own = systemsOf(g, player, "active");
       if (action.systems.some((id) => !own.includes(id))) throw new RulesError("Bulwarks go on your systems");
       for (const id of SYSTEM_IDS) g.systems[id]!.bulwark = false;
       for (const id of action.systems) g.systems[id]!.bulwark = true;
+      g.turn.bulwarksMoved = true;
+      if (action.systems.length > 0) {
+        log(g, `raises Bulwarks over ${action.systems.map((id) => SYSTEMS[id]!.name).join(" and ")}`);
+      }
       return g;
     }
 
@@ -266,25 +278,29 @@ export function apply(state: GameState, action: Action): GameState {
       }
       g.systems[action.system]!.tokens += 1;
       g.turn.verdantPlaced = true;
+      log(g, `the Mycelium spreads on ${SYSTEMS[action.system]!.name}`);
       return g;
     }
 
     case "nameDiplomaticTarget": {
       requirePhase(g, "post");
       if (p.active?.trait !== "diplomatic") throw new RulesError("not Diplomatic");
+      if (g.turn.pactNamed) throw new RulesError("pact already named this turn");
       if (action.player === player || action.player < 0 || action.player >= g.players.length) {
         throw new RulesError("name an opponent");
       }
       p.diplomaticTarget = action.player;
+      g.turn.pactNamed = true;
       log(g, `Diplomatic pact: ${g.config.seats[action.player]!.name} may not attack`);
       return g;
     }
 
     case "endTurn": {
       if (g.phase === "start") {
-        // A player with no active civ and nothing to do (should not normally happen) or
-        // a player who wants to sit tight: score remnants only.
         if (p.active) throw new RulesError("take your turn (recall/conquer or collapse)");
+        // A player with no civilization MUST choose and launch (rules 6). Passing is only
+        // possible in the degenerate case where the market has run dry.
+        if (g.market.length > 0) throw new RulesError("you must choose a new civilization");
         const lines = scoreRemnants(g, player);
         const total = totalOf(lines);
         if (total > 0) {
@@ -330,11 +346,11 @@ function rollDie(g: GameState): number {
 function refillMarket(g: GameState): void {
   while (g.market.length < g.config.marketSize) {
     if (g.speciesDeck.length === 0 && g.speciesDiscard.length > 0) {
-      g.speciesDeck = g.speciesDiscard;
+      [g.rngState, g.speciesDeck] = shuffle(g.rngState, g.speciesDiscard);
       g.speciesDiscard = [];
     }
     if (g.traitDeck.length === 0 && g.traitDiscard.length > 0) {
-      g.traitDeck = g.traitDiscard;
+      [g.rngState, g.traitDeck] = shuffle(g.rngState, g.traitDiscard);
       g.traitDiscard = [];
     }
     if (g.speciesDeck.length === 0 || g.traitDeck.length === 0) break; // market shrinks — extreme edge
@@ -380,14 +396,10 @@ function clearDefender(g: GameState, target: SystemId): void {
   const owner = g.players[occ.player]!;
   if (occ.kind === "remnant") {
     // Remnant defeated: all tokens removed from the game.
-    const species = owner.remnants[occ.remnantIdx]?.species;
-    if (species === "kharax_brood" && hasPlanet(target, "volcanic")) {
-      // Attacker removes one participating token after the conquest — handled by caller via flag.
-      g.turn.lastDieRoll = g.turn.lastDieRoll; // no-op; see resolveConquest
-    }
     sys.tokens = 0;
     sys.occupant = null;
     removeCivMarkers(g, target);
+    cleanupDeadRemnant(g, occ.player, occ.remnantIdx);
     return;
   }
   // Active civilization defeated.
@@ -414,7 +426,10 @@ function clearDefender(g: GameState, target: SystemId): void {
 function resolveConquest(g: GameState, player: PlayerId, target: SystemId, tokensCommitted: number): void {
   const p = g.players[player]!;
   const sys = g.systems[target]!;
-  const wasNonEmpty = sys.occupant !== null || sys.neutrals > 0;
+  // Own Remnants don't feed conquest-counters (Parasitic pillage, Kharax growth) —
+  // eating your own dead is legal but not rewarded.
+  const ownRemnant = sys.occupant?.player === player && sys.occupant.kind === "remnant";
+  const wasNonEmpty = (sys.occupant !== null || sys.neutrals > 0) && !ownRemnant;
   const defOcc = sys.occupant;
   const kharaxRevenge =
     defOcc?.kind === "remnant" &&
@@ -433,7 +448,25 @@ function resolveConquest(g: GameState, player: PlayerId, target: SystemId, token
   }
 
   g.turn.conquests.push({ system: target, wasNonEmpty });
-  log(g, `conquered ${SYSTEMS[target]!.name} (${tokensCommitted} tokens)`);
+  log(g, `conquered ${SYSTEMS[target]!.name} (${tokensCommitted} token${tokensCommitted === 1 ? "" : "s"})`);
+}
+
+/** If a Remnant Empire holds no systems, its species card leaves play for the discard pile. */
+function cleanupDeadRemnant(g: GameState, player: PlayerId, idx: number): void {
+  const p = g.players[player]!;
+  if (!p.remnants[idx]) return;
+  const holdsAny = SYSTEM_IDS.some((id) => {
+    const occ = g.systems[id]!.occupant;
+    return occ?.player === player && occ.kind === "remnant" && occ.remnantIdx === idx;
+  });
+  if (holdsAny) return;
+  const [dead] = p.remnants.splice(idx, 1);
+  g.speciesDiscard.push(dead!.species);
+  for (const id of SYSTEM_IDS) {
+    const occ = g.systems[id]!.occupant;
+    if (occ?.player === player && occ.kind === "remnant" && occ.remnantIdx > idx) occ.remnantIdx -= 1;
+  }
+  log(g, `the ${SPECIES[dead!.species]!.name} Remnant fades from the galaxy`);
 }
 
 function autoRedeploy(g: GameState, player: PlayerId): void {

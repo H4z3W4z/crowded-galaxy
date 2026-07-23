@@ -71,6 +71,8 @@ export function freshTurnFlags(): GameState["turn"] {
     jovianBonus: 0,
     starbasePlaced: false,
     verdantPlaced: false,
+    bulwarksMoved: false,
+    pactNamed: false,
     launchTurn: false,
     lastDieRoll: null,
   };

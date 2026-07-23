@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   aiNextAction,
   checkConquest,
+  checkRemnantConquest,
   conversionTargets,
   hasPlanet,
   legalTargets,
@@ -117,7 +118,7 @@ function Header({ round, rounds }: { round: number; rounds: number }) {
     <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
       <h2 style={{ fontSize: "var(--display-sm)" }}>Crowded Galaxy</h2>
       <Badge tone="ink" mono>
-        Round {round}/{rounds}
+        {round > rounds ? "Final" : `Round ${round}/${rounds}`}
       </Badge>
     </div>
   );
@@ -197,6 +198,8 @@ function PhaseControls({
     const check = sel ? checkConquest(game, player, sel) : null;
     const cost = sel ? reachable.get(sel) : undefined;
     const short = cost !== undefined && civ ? cost - civ.hand : 0;
+    const hasCryari = p.remnants.some((r) => r.species === "cryari_revenants");
+    const march = sel && hasCryari && !game.turn.remnantConquerUsed ? checkRemnantConquest(game, player, sel) : null;
     return (
       <Panel surface="inset" pad="12px">
         <ActionTitle>
@@ -228,6 +231,11 @@ function PhaseControls({
                   Gamble the die (short {short})
                 </Button>
               )}
+              {short > 3 && (
+                <span style={{ fontSize: 13, color: "var(--ink-3)" }}>
+                  You are {short} tokens short — too far even for the die.
+                </span>
+              )}
             </Row>
           </>
         ) : sel && check && !check.legal ? (
@@ -236,6 +244,13 @@ function PhaseControls({
           </div>
         ) : (
           <div style={{ fontSize: 13, color: "var(--ink-3)" }}>Select a highlighted system to conquer.</div>
+        )}
+        {march?.legal && sel && (
+          <Row style={{ marginTop: 8 }}>
+            <Button variant="secondary" size="sm" icon="skull" onClick={() => dispatch({ type: "remnantConquer", target: sel })}>
+              March the Revenants ({march.cost})
+            </Button>
+          </Row>
         )}
         {conversions.length > 0 && selected && conversions.includes(selected) && (
           <Row style={{ marginTop: 8 }}>
@@ -260,9 +275,18 @@ function PhaseControls({
   if (game.phase === "post") {
     const own = systemsOf(game, player, "active");
     const starbases = own.reduce((s, id) => s + game.systems[id]!.starbases, 0);
+    const hasMapActions =
+      (civ?.trait === "fortress_building" && !game.turn.starbasePlaced && starbases < 6) ||
+      civ?.trait === "heroic" ||
+      (civ?.species === "verdant_mycelium" && !game.turn.verdantPlaced);
     return (
       <Panel surface="inset" pad="12px">
         <ActionTitle>Consolidate</ActionTitle>
+        {hasMapActions && !selected && (
+          <div style={{ fontSize: 13, color: "var(--ink-3)", marginBottom: 8 }}>
+            Select one of your systems on the map to use your civilization's placement abilities.
+          </div>
+        )}
         {civ?.trait === "fortress_building" && !game.turn.starbasePlaced && starbases < 6 && selected && own.includes(selected) && (
           <Row>
             <Button variant="secondary" size="sm" icon="castle" onClick={() => dispatch({ type: "placeStarbase", system: selected })}>
@@ -361,6 +385,11 @@ function RedeployControls({ game }: { game: NonNullable<ReturnType<typeof useSto
           Keep as is & end turn
         </Button>
       </Row>
+      {pool > 0 && (
+        <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 6 }}>
+          {pool} unassigned token{pool === 1 ? "" : "s"} will stay in hand until next turn.
+        </div>
+      )}
     </Panel>
   );
 }
@@ -422,16 +451,17 @@ function GameOver({ game, onAgain }: { game: NonNullable<ReturnType<typeof useSt
 }
 
 function Log({ game }: { game: NonNullable<ReturnType<typeof useStore.getState>["game"]> }) {
-  const entries = game.log.slice(-9).reverse();
+  const entries = game.log.slice().reverse();
   return (
     <Panel surface="inset" pad="10px" style={{ marginTop: "auto" }}>
       <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 11, letterSpacing: "var(--tracking-caps)", textTransform: "uppercase", color: "var(--ink-3)", marginBottom: 6 }}>
         Chronicle
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 3, maxHeight: 190, overflowY: "auto" }}>
         {entries.map((e, i) => (
           <div key={game.log.length - i} style={{ fontSize: 12, color: i === 0 ? "var(--ink)" : "var(--ink-3)" }}>
-            <span style={{ fontFamily: "var(--font-mono)", color: `var(--p${e.player + 1}-deep)` }}>{game.config.seats[e.player]!.name}</span> {e.text}
+            <span style={{ fontFamily: "var(--font-mono)", color: `var(--p${e.player + 1}-deep)` }}>{game.config.seats[e.player]!.name}</span>{" "}
+            <span style={{ color: "var(--ink-3)", fontFamily: "var(--font-mono)", fontSize: 10 }}>r{e.round}</span> {e.text}
           </div>
         ))}
       </div>

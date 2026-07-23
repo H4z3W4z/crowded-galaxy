@@ -49,12 +49,16 @@ traits:
 
   - id: berserk
     name: Berserk
-    population: 4
+    population: 5
     sw_analog: Berserk
     status: new
     ability: >-
       Roll the reinforcement die BEFORE each conquest and apply the result
       as a discount to that conquest's cost, minimum 1.
+    notes: >-
+      v0.2.1: population 4 -> 5. At 4 the min-1 cost clip made Berserk
+      strictly worse in EV than Aggressive at common cost points
+      (adversarial playtest, exploit-hunter probe).
 
   - id: colonizing
     name: Colonizing

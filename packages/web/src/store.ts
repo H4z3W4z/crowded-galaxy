@@ -50,9 +50,14 @@ export const useStore = create<Store>((set, get) => ({
   },
 
   undo: () => {
-    const { history } = get();
-    if (history.length === 0) return;
-    set({ game: history[history.length - 1]!, history: history.slice(0, -1), selected: null, error: null });
+    // Rewind to the latest human decision point — undoing into AI history just
+    // makes the deterministic AI replay the same moves, which reads as a broken undo.
+    const { history, game } = get();
+    if (!game || history.length === 0) return;
+    let idx = history.length - 1;
+    while (idx >= 0 && game.config.seats[history[idx]!.current]!.ai) idx--;
+    if (idx < 0) return;
+    set({ game: history[idx]!, history: history.slice(0, idx), selected: null, error: null });
   },
 
   select: (id) => set({ selected: id }),

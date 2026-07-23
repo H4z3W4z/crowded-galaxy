@@ -78,6 +78,8 @@ export interface TurnFlags {
   jovianBonus: number; // bonus tokens currently loaned to the hand
   starbasePlaced: boolean;
   verdantPlaced: boolean;
+  bulwarksMoved: boolean;
+  pactNamed: boolean;
   launchTurn: boolean;
   lastDieRoll: number | null;
 }

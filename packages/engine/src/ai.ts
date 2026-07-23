@@ -3,8 +3,8 @@
 
 import { SPECIES, TRAITS } from "./gen/cards.js";
 import { SYSTEMS } from "./gen/map.js";
-import { checkRemnantConquest, conversionTargets, favoredHabitats, hasPlanet, legalTargets, systemsOf } from "./rules.js";
-import type { Action, GameState, PlayerId, SystemId } from "./types.js";
+import { checkRemnantConquest, conversionTargets, favoredHabitats, hasPlanet, legalTargets, neighbors, systemsOf } from "./rules.js";
+import type { Action, GameState, PlanetType, PlayerId, SystemId } from "./types.js";
 
 /** Next action for the current (AI) player. Call repeatedly until the turn passes to someone else. */
 export function aiNextAction(g: GameState): Action {
@@ -12,17 +12,24 @@ export function aiNextAction(g: GameState): Action {
   const p = g.players[player]!;
 
   if (g.phase === "start") {
-    if (!p.active) return { type: "chooseCivilization", slot: bestMarketSlot(g, player) };
+    if (!p.active) {
+      if (g.market.length === 0) return { type: "endTurn" }; // market ran dry — legal pass
+      return { type: "chooseCivilization", slot: bestMarketSlot(g, player) };
+    }
     if (shouldCollapse(g, player)) return { type: "collapse" };
     return { type: "recall", take: recallPlan(g, player) };
   }
 
   if (g.phase === "conquer") {
     const civ = p.active!;
+    // Adaptive: pick the second habitat that shows up most among current legal targets.
+    if (civ.trait === "adaptive" && g.turn.adaptiveHabitat === null) {
+      return { type: "chooseAdaptiveHabitat", habitat: bestAdaptiveHabitat(g, player) };
+    }
     // Free value first: Pelagic conversion.
     const conversions = conversionTargets(g, player);
     if (conversions.length > 0) return { type: "convertToken", target: conversions[0]! };
-    // Cryari remnant conquest when available and cheap.
+    // Cryari remnant conquest when available and affordable.
     if (!g.turn.remnantConquerUsed && p.remnants.some((r) => r.species === "cryari_revenants")) {
       const target = bestRemnantTarget(g, player);
       if (target) return { type: "remnantConquer", target };
@@ -51,12 +58,40 @@ export function aiNextAction(g: GameState): Action {
         return { type: "placeStarbase", system: frontier };
       }
     }
-    if (p.active?.trait === "diplomatic") {
+    if (p.active?.trait === "heroic" && !g.turn.bulwarksMoved) {
+      // Shield the two biggest stacks.
+      const own = systemsOf(g, player, "active").sort((a, b) => g.systems[b]!.tokens - g.systems[a]!.tokens);
+      if (own.length > 0) return { type: "moveBulwarks", systems: own.slice(0, 2) };
+    }
+    if (p.active?.trait === "diplomatic" && !g.turn.pactNamed) {
       const threat = biggestThreat(g, player);
       if (threat !== null && p.diplomaticTarget !== threat) return { type: "nameDiplomaticTarget", player: threat };
     }
+    // Twilight: take the free-tempo collapse once the civ is winding down.
+    if (p.active?.trait === "twilight" && p.active.turnsActive >= 2 && g.round < g.config.rounds) {
+      const own = systemsOf(g, player, "active");
+      const spare = own.reduce((s, id) => s + Math.max(0, g.systems[id]!.tokens - 1), 0) + p.active.hand;
+      if (spare < 4) return { type: "collapse" };
+    }
   }
   return { type: "endTurn" };
+}
+
+function bestAdaptiveHabitat(g: GameState, player: PlayerId): PlanetType {
+  const counts = new Map<PlanetType, number>();
+  for (const { target } of legalTargets(g, player)) {
+    for (const pl of SYSTEMS[target]!.planets) counts.set(pl, (counts.get(pl) ?? 0) + 1);
+  }
+  const own = SPECIES[g.players[player]!.active!.species]!.habitat;
+  let best: PlanetType = own === "ocean" ? "terran" : "ocean";
+  let bestN = -1;
+  for (const [pl, n] of counts) {
+    if (pl !== own && n > bestN) {
+      bestN = n;
+      best = pl;
+    }
+  }
+  return best;
 }
 
 function bestMarketSlot(g: GameState, player: PlayerId): number {
@@ -87,7 +122,12 @@ function shouldCollapse(g: GameState, player: PlayerId): boolean {
   const own = systemsOf(g, player, "active");
   const spare = own.reduce((s, id) => s + Math.max(0, g.systems[id]!.tokens - 1), 0) + civ.hand;
   const cheapest = legalTargets(g, player).reduce((m, c) => Math.min(m, c.cost), Infinity);
-  return spare < cheapest || (spare < 3 && civ.turnsActive >= 3);
+  if (spare < cheapest || (spare < 3 && civ.turnsActive >= 3)) return true;
+  // An old empire that can barely take one more system should cycle — the relaunch
+  // (fresh population + banked market influence) usually out-tempos limping onward.
+  if (civ.turnsActive >= 4 && spare < cheapest * 2 && g.round <= g.config.rounds - 2) return true;
+  // Hard stop on immortal empires (Verdant-style): cycle before the treadmill stalls.
+  return civ.turnsActive >= 6 && g.round <= g.config.rounds - 2;
 }
 
 function recallPlan(g: GameState, player: PlayerId): Record<SystemId, number> {
@@ -126,19 +166,19 @@ function bestRemnantTarget(g: GameState, player: PlayerId): SystemId | null {
       bestCost = c.cost;
     }
   }
-  return bestCost <= 3 ? best : null;
+  return bestCost <= 4 ? best : null;
 }
 
 function biggestThreat(g: GameState, player: PlayerId): PlayerId | null {
-  // The opponent with the most active tokens adjacent to us.
-  const own = new Set(systemsOf(g, player, "active"));
+  // The opponent with the most active tokens in systems ADJACENT to ours.
+  const own = systemsOf(g, player, "active");
+  const border = new Set<string>();
+  for (const id of own) for (const n of neighbors(id)) border.add(n);
   const pressure = new Map<PlayerId, number>();
-  for (const id of own) {
-    for (const n of Object.keys(g.systems)) {
-      const occ = g.systems[n]!.occupant;
-      if (occ && occ.player !== player && occ.kind === "active") {
-        pressure.set(occ.player, (pressure.get(occ.player) ?? 0) + g.systems[n]!.tokens);
-      }
+  for (const n of border) {
+    const occ = g.systems[n]!.occupant;
+    if (occ && occ.player !== player && occ.kind === "active") {
+      pressure.set(occ.player, (pressure.get(occ.player) ?? 0) + g.systems[n]!.tokens);
     }
   }
   let best: PlayerId | null = null;

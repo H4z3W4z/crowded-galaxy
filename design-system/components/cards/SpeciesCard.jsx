@@ -15,7 +15,7 @@ export function SpeciesCard({ species, side = "active", compact = false, width =
       <div style={{ background: remnant ? "var(--paper-2)" : pt.tint, borderBottom: "var(--bw) solid var(--ink)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
         <PlanetOrb type={s.habitat} size={30} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: compact ? 15 : 18, lineHeight: 1.1, textWrap: "balance", overflowWrap: "anywhere" }}>{s.name}</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: compact ? 15 : 18, lineHeight: 1.1, textWrap: "balance", overflowWrap: "break-word" }}>{s.name}</div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-2)", marginTop: 2 }}>{remnant ? "REMNANT EMPIRE" : `${pt.label || ""} habitat`}</div>
         </div>
         <div style={{ width: 42, height: 42, borderRadius: "50%", background: "var(--card)", border: "var(--bw) solid var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 19, flexShrink: 0 }} title={`${s.population} population`}>{remnant ? <Icon name="skull" size={20} /> : s.population}</div>

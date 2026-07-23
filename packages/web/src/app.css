@@ -1,0 +1,12 @@
+html, body, #root { height: 100%; }
+
+.cg-spin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-3);
+  border-top-color: var(--ink);
+  display: inline-block;
+  animation: cg-rot 0.8s linear infinite;
+}
+@keyframes cg-rot { to { transform: rotate(360deg); } }

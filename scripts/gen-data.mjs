@@ -41,11 +41,16 @@ export const TRAIT_IDS: string[] = ${JSON.stringify(Object.keys(traitsOut))};
 `);
 
 const systemsOut = Object.fromEntries(
-  map.systems.map((s) => [s.code, {
-    code: s.code, name: s.name, ring: s.ring, planets: s.planets,
-    rimGate: !!s.rim_gate, hazard: !!s.hazard, relic: !!s.relic,
-    neutrals: s.neutrals ?? 0, x: s.position.x, y: s.position.y,
-  }]),
+  map.systems.map((s) => {
+    // Each system is a single planet. Expose it as `planet` and also as a
+    // 1-element `planets` array so habitat/hasPlanet logic stays unchanged.
+    const planet = s.planet ?? s.planets?.[0];
+    return [s.code, {
+      code: s.code, name: s.name, ring: s.ring, planet, planets: [planet],
+      rimGate: !!s.rim_gate, hazard: !!s.hazard, relic: !!s.relic,
+      neutrals: s.neutrals ?? 0, x: s.position.x, y: s.position.y,
+    }];
+  }),
 );
 
 writeFileSync(join(outDir, "map.ts"), `${banner}
@@ -53,7 +58,7 @@ import type { PlanetType } from "../types.js";
 
 export interface SystemDef {
   code: string; name: string; ring: "outer" | "middle" | "inner" | "core";
-  planets: PlanetType[]; rimGate: boolean; hazard: boolean; relic: boolean;
+  planet: PlanetType; planets: PlanetType[]; rimGate: boolean; hazard: boolean; relic: boolean;
   neutrals: number; x: number; y: number;
 }
 

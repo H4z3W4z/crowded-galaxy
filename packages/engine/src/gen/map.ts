@@ -4,7 +4,7 @@ import type { PlanetType } from "../types.js";
 
 export interface SystemDef {
   code: string; name: string; ring: "outer" | "middle" | "inner" | "core";
-  planets: PlanetType[]; rimGate: boolean; hazard: boolean; relic: boolean;
+  planet: PlanetType; planets: PlanetType[]; rimGate: boolean; hazard: boolean; relic: boolean;
   neutrals: number; x: number; y: number;
 }
 
@@ -13,9 +13,9 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "code": "BS",
     "name": "Blue Silence",
     "ring": "core",
+    "planet": "ocean",
     "planets": [
-      "ocean",
-      "terran"
+      "ocean"
     ],
     "rimGate": false,
     "hazard": false,
@@ -28,297 +28,53 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "code": "CN",
     "name": "Crown Nexus",
     "ring": "core",
+    "planet": "terran",
     "planets": [
-      "terran",
-      "gas_giant",
-      "barren"
+      "terran"
     ],
     "rimGate": false,
     "hazard": false,
     "relic": true,
     "neutrals": 2,
     "x": 500,
-    "y": 608
+    "y": 618
   },
   "RM": {
     "code": "RM",
     "name": "Radiant Maw",
     "ring": "core",
+    "planet": "volcanic",
     "planets": [
-      "volcanic",
-      "gas_giant"
+      "volcanic"
     ],
     "rimGate": false,
     "hazard": false,
     "relic": true,
     "neutrals": 2,
-    "x": 397,
-    "y": 533
+    "x": 388,
+    "y": 536
   },
   "CY": {
     "code": "CY",
     "name": "Cryos",
     "ring": "core",
+    "planet": "ice",
     "planets": [
-      "ice",
-      "ice",
-      "ocean"
+      "ice"
     ],
     "rimGate": false,
     "hazard": false,
     "relic": false,
     "neutrals": 2,
-    "x": 437,
-    "y": 413
+    "x": 431,
+    "y": 405
   },
   "SO": {
     "code": "SO",
     "name": "Solace",
     "ring": "core",
+    "planet": "barren",
     "planets": [
-      "terran",
-      "barren"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 1,
-    "x": 563,
-    "y": 413
-  },
-  "OV": {
-    "code": "OV",
-    "name": "Orphean Vault",
-    "ring": "core",
-    "planets": [
-      "barren",
-      "ice"
-    ],
-    "rimGate": false,
-    "hazard": true,
-    "relic": true,
-    "neutrals": 2,
-    "x": 603,
-    "y": 533
-  },
-  "HD": {
-    "code": "HD",
-    "name": "Halcyon Deep",
-    "ring": "inner",
-    "planets": [
-      "ocean",
-      "gas_giant"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 1,
-    "x": 456,
-    "y": 645
-  },
-  "RC": {
-    "code": "RC",
-    "name": "Red Choir",
-    "ring": "inner",
-    "planets": [
-      "volcanic",
-      "volcanic"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 1,
-    "x": 383,
-    "y": 674
-  },
-  "SV": {
-    "code": "SV",
-    "name": "Silica Verge",
-    "ring": "middle",
-    "planets": [
-      "barren",
-      "terran"
-    ],
-    "rimGate": false,
-    "hazard": true,
-    "relic": false,
-    "neutrals": 1,
-    "x": 292,
-    "y": 669
-  },
-  "AR": {
-    "code": "AR",
-    "name": "Altair Reach",
-    "ring": "middle",
-    "planets": [
-      "terran",
-      "barren"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 198,
-    "y": 622
-  },
-  "CW": {
-    "code": "CW",
-    "name": "Cinderwake",
-    "ring": "outer",
-    "planets": [
-      "volcanic"
-    ],
-    "rimGate": true,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 117,
-    "y": 533
-  },
-  "PL": {
-    "code": "PL",
-    "name": "Pelagos",
-    "ring": "outer",
-    "planets": [
-      "ocean",
-      "ocean",
-      "ice"
-    ],
-    "rimGate": true,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 68,
-    "y": 408
-  },
-  "AG": {
-    "code": "AG",
-    "name": "Aurora Gate",
-    "ring": "inner",
-    "planets": [
-      "ice",
-      "gas_giant",
-      "terran"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 1,
-    "x": 348,
-    "y": 503
-  },
-  "TA": {
-    "code": "TA",
-    "name": "Tethys Arc",
-    "ring": "inner",
-    "planets": [
-      "ocean",
-      "ice"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 1,
-    "x": 298,
-    "y": 442
-  },
-  "FH": {
-    "code": "FH",
-    "name": "Forgeheart",
-    "ring": "middle",
-    "planets": [
-      "volcanic",
-      "barren",
-      "gas_giant"
-    ],
-    "rimGate": false,
-    "hazard": true,
-    "relic": false,
-    "neutrals": 1,
-    "x": 275,
-    "y": 354
-  },
-  "ZC": {
-    "code": "ZC",
-    "name": "Zephyr Crown",
-    "ring": "middle",
-    "planets": [
-      "gas_giant",
-      "barren"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 290,
-    "y": 250
-  },
-  "NB": {
-    "code": "NB",
-    "name": "Nacre Belt",
-    "ring": "outer",
-    "planets": [
-      "barren",
-      "ice"
-    ],
-    "rimGate": true,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 350,
-    "y": 147
-  },
-  "VG": {
-    "code": "VG",
-    "name": "Viridian Gate",
-    "ring": "outer",
-    "planets": [
-      "terran",
-      "ocean"
-    ],
-    "rimGate": true,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 454,
-    "y": 60
-  },
-  "GW": {
-    "code": "GW",
-    "name": "Greenwake",
-    "ring": "inner",
-    "planets": [
-      "terran",
-      "ocean"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 1,
-    "x": 451,
-    "y": 356
-  },
-  "JL": {
-    "code": "JL",
-    "name": "Jove's Lantern",
-    "ring": "inner",
-    "planets": [
-      "gas_giant",
-      "gas_giant"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 1,
-    "x": 493,
-    "y": 290
-  },
-  "PA": {
-    "code": "PA",
-    "name": "Pale Anchor",
-    "ring": "middle",
-    "planets": [
-      "ice",
       "barren"
     ],
     "rimGate": false,
@@ -326,144 +82,382 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "relic": false,
     "neutrals": 1,
     "x": 569,
-    "y": 241
+    "y": 405
   },
-  "OS": {
-    "code": "OS",
-    "name": "Ossuary",
-    "ring": "middle",
+  "OV": {
+    "code": "OV",
+    "name": "Orphean Vault",
+    "ring": "core",
+    "planet": "gas_giant",
     "planets": [
-      "barren",
-      "volcanic"
+      "gas_giant"
     ],
     "rimGate": false,
     "hazard": true,
-    "relic": false,
-    "neutrals": 0,
-    "x": 673,
-    "y": 224
+    "relic": true,
+    "neutrals": 2,
+    "x": 612,
+    "y": 536
   },
-  "EF": {
-    "code": "EF",
-    "name": "Emberfall",
-    "ring": "outer",
-    "planets": [
-      "volcanic",
-      "gas_giant"
-    ],
-    "rimGate": true,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 790,
-    "y": 248
-  },
-  "FM": {
-    "code": "FM",
-    "name": "Frostmere",
-    "ring": "outer",
-    "planets": [
-      "ice",
-      "ocean"
-    ],
-    "rimGate": true,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 904,
-    "y": 320
-  },
-  "AB": {
-    "code": "AB",
-    "name": "Ashen Bloom",
+  "HD": {
+    "code": "HD",
+    "name": "Halcyon Deep",
     "ring": "inner",
+    "planet": "ocean",
     "planets": [
-      "volcanic",
-      "terran"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 1,
-    "x": 621,
-    "y": 409
-  },
-  "CS": {
-    "code": "CS",
-    "name": "Cloudspire",
-    "ring": "inner",
-    "planets": [
-      "gas_giant",
-      "terran",
       "ocean"
     ],
     "rimGate": false,
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 697,
-    "y": 428
+    "x": 453,
+    "y": 676
   },
-  "KD": {
-    "code": "KD",
-    "name": "Kestrel Dust",
+  "RC": {
+    "code": "RC",
+    "name": "Red Choir",
+    "ring": "inner",
+    "planet": "volcanic",
+    "planets": [
+      "volcanic"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 376,
+    "y": 715
+  },
+  "SV": {
+    "code": "SV",
+    "name": "Silica Verge",
     "ring": "middle",
+    "planet": "barren",
     "planets": [
-      "barren",
       "barren"
     ],
     "rimGate": false,
     "hazard": true,
     "relic": false,
     "neutrals": 1,
-    "x": 768,
-    "y": 486
+    "x": 278,
+    "y": 722
   },
-  "MR": {
-    "code": "MR",
-    "name": "Meridian",
+  "AR": {
+    "code": "AR",
+    "name": "Altair Reach",
     "ring": "middle",
+    "planet": "terran",
     "planets": [
-      "terran",
-      "barren",
-      "ocean"
+      "terran"
     ],
     "rimGate": false,
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 816,
-    "y": 579
+    "x": 171,
+    "y": 690
   },
-  "BL": {
-    "code": "BL",
-    "name": "Bellows",
+  "CW": {
+    "code": "CW",
+    "name": "Cinderwake",
     "ring": "outer",
+    "planet": "volcanic",
     "planets": [
-      "gas_giant",
       "volcanic"
     ],
     "rimGate": true,
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 829,
-    "y": 698
+    "x": 69,
+    "y": 615
   },
-  "SR": {
-    "code": "SR",
-    "name": "Sable Rift",
+  "PL": {
+    "code": "PL",
+    "name": "Pelagos",
     "ring": "outer",
+    "planet": "ocean",
     "planets": [
-      "barren",
+      "ocean"
+    ],
+    "rimGate": true,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": -12,
+    "y": 500
+  },
+  "AG": {
+    "code": "AG",
+    "name": "Aurora Gate",
+    "ring": "inner",
+    "planet": "ice",
+    "planets": [
+      "ice"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 318,
+    "y": 510
+  },
+  "TA": {
+    "code": "TA",
+    "name": "Tethys Arc",
+    "ring": "inner",
+    "planet": "ocean",
+    "planets": [
+      "ocean"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 257,
+    "y": 448
+  },
+  "FH": {
+    "code": "FH",
+    "name": "Forgeheart",
+    "ring": "middle",
+    "planet": "volcanic",
+    "planets": [
+      "volcanic"
+    ],
+    "rimGate": false,
+    "hazard": true,
+    "relic": false,
+    "neutrals": 1,
+    "x": 220,
+    "y": 357
+  },
+  "ZC": {
+    "code": "ZC",
+    "name": "Zephyr Crown",
+    "ring": "middle",
+    "planet": "gas_giant",
+    "planets": [
+      "gas_giant"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": 218,
+    "y": 246
+  },
+  "NB": {
+    "code": "NB",
+    "name": "Nacre Belt",
+    "ring": "outer",
+    "planet": "ocean",
+    "planets": [
+      "ocean"
+    ],
+    "rimGate": true,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": 257,
+    "y": 126
+  },
+  "VG": {
+    "code": "VG",
+    "name": "Viridian Gate",
+    "ring": "outer",
+    "planet": "terran",
+    "planets": [
+      "terran"
+    ],
+    "rimGate": true,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": 342,
+    "y": 13
+  },
+  "GW": {
+    "code": "GW",
+    "name": "Greenwake",
+    "ring": "inner",
+    "planet": "terran",
+    "planets": [
+      "terran"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 435,
+    "y": 330
+  },
+  "JL": {
+    "code": "JL",
+    "name": "Jove's Lantern",
+    "ring": "inner",
+    "planet": "gas_giant",
+    "planets": [
+      "gas_giant"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 474,
+    "y": 253
+  },
+  "PA": {
+    "code": "PA",
+    "name": "Pale Anchor",
+    "ring": "middle",
+    "planet": "ice",
+    "planets": [
+      "ice"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 549,
+    "y": 190
+  },
+  "OS": {
+    "code": "OS",
+    "name": "Ossuary",
+    "ring": "middle",
+    "planet": "barren",
+    "planets": [
+      "barren"
+    ],
+    "rimGate": false,
+    "hazard": true,
+    "relic": false,
+    "neutrals": 0,
+    "x": 655,
+    "y": 153
+  },
+  "EF": {
+    "code": "EF",
+    "name": "Emberfall",
+    "ring": "outer",
+    "planet": "volcanic",
+    "planets": [
+      "volcanic"
+    ],
+    "rimGate": true,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": 781,
+    "y": 153
+  },
+  "FM": {
+    "code": "FM",
+    "name": "Frostmere",
+    "ring": "outer",
+    "planet": "ice",
+    "planets": [
       "ice"
     ],
     "rimGate": true,
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 796,
-    "y": 828
+    "x": 914,
+    "y": 199
+  },
+  "AB": {
+    "code": "AB",
+    "name": "Ashen Bloom",
+    "ring": "inner",
+    "planet": "ice",
+    "planets": [
+      "ice"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 641,
+    "y": 385
+  },
+  "CS": {
+    "code": "CS",
+    "name": "Cloudspire",
+    "ring": "inner",
+    "planet": "gas_giant",
+    "planets": [
+      "gas_giant"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 727,
+    "y": 399
+  },
+  "KD": {
+    "code": "KD",
+    "name": "Kestrel Dust",
+    "ring": "middle",
+    "planet": "barren",
+    "planets": [
+      "barren"
+    ],
+    "rimGate": false,
+    "hazard": true,
+    "relic": false,
+    "neutrals": 1,
+    "x": 810,
+    "y": 451
+  },
+  "MR": {
+    "code": "MR",
+    "name": "Meridian",
+    "ring": "middle",
+    "planet": "terran",
+    "planets": [
+      "terran"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": 878,
+    "y": 540
+  },
+  "BL": {
+    "code": "BL",
+    "name": "Bellows",
+    "ring": "outer",
+    "planet": "gas_giant",
+    "planets": [
+      "gas_giant"
+    ],
+    "rimGate": true,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": 916,
+    "y": 660
+  },
+  "SR": {
+    "code": "SR",
+    "name": "Sable Rift",
+    "ring": "outer",
+    "planet": "barren",
+    "planets": [
+      "barren"
+    ],
+    "rimGate": true,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": 914,
+    "y": 801
   }
 } as const;
 export const LANES: [string, string][] = [["BS","CN"],["BS","RM"],["BS","CY"],["BS","SO"],["BS","OV"],["OV","CN"],["CN","RM"],["RM","CY"],["CY","SO"],["SO","OV"],["CN","HD"],["HD","RC"],["RC","SV"],["SV","AR"],["AR","CW"],["CW","PL"],["RM","AG"],["AG","TA"],["TA","FH"],["FH","ZC"],["ZC","NB"],["NB","VG"],["CY","GW"],["GW","JL"],["JL","PA"],["PA","OS"],["OS","EF"],["EF","FM"],["SO","AB"],["AB","CS"],["CS","KD"],["KD","MR"],["MR","BL"],["BL","SR"]];

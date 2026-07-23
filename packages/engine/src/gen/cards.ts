@@ -54,8 +54,8 @@ export const SPECIES: Record<string, SpeciesDef> = {
     "name": "Ossian Prospectors",
     "population": 7,
     "habitat": "barren",
-    "active": "Score +1 Influence for each active system containing at least two Barren planets.",
-    "remnant": "Score +1 Influence if your Remnants control any three-planet system."
+    "active": "Score +1 Influence for every two Barren systems your active empire controls.",
+    "remnant": "Score +1 Influence if your Remnants control two or more Barren systems."
   },
   "cryari_revenants": {
     "id": "cryari_revenants",
@@ -177,7 +177,7 @@ export const TRAITS: Record<string, TraitDef> = {
     "id": "industrious",
     "name": "Industrious",
     "population": 4,
-    "ability": "Score +1 Influence for each active three-planet system you control."
+    "ability": "Score +2 Influence if your active empire controls five or more systems."
   },
   "mercantile": {
     "id": "mercantile",

@@ -142,6 +142,7 @@ export const MAP_LEGEND: LegendEntry[] = [
   },
 ];
 
+// Every system is a single planet; a species scores +1 from each system whose planet is its favored type.
 export const PLANET_LEGEND: { type: PlanetType; label: string }[] = (
   ["terran", "ocean", "barren", "gas_giant", "ice", "volcanic"] as PlanetType[]
 ).map((type) => ({ type, label: (PLANET_TYPES as Record<string, { label: string }>)[type]!.label }));

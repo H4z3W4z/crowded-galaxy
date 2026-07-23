@@ -83,12 +83,17 @@ species:
     population: 7
     habitat: barren
     sw_analog: Dwarves
-    status: kept
+    status: reworked
     active: >-
-      Score +1 Influence for each active system containing at least two
-      Barren planets.
+      Score +1 Influence for every two Barren systems your active empire
+      controls.
     remnant: >-
-      Score +1 Influence if your Remnants control any three-planet system.
+      Score +1 Influence if your Remnants control two or more Barren
+      systems.
+    notes: >-
+      v0.4: reworked for single-planet systems (was "systems with 2+
+      Barren planets" / "any 3-planet system", both impossible now).
+      Barren-concentration specialist.
 
   - id: cryari_revenants
     name: Cryari Revenants

@@ -147,11 +147,11 @@ function targetValue(g: GameState, player: PlayerId, target: SystemId, cost: num
   if (habs.some((h) => def.planets.includes(h))) inf += 1;
   const trait = g.players[player]!.active!.trait;
   if (trait === "ancient" && def.relic) inf += 1;
-  if (trait === "industrious" && def.planets.length >= 3) inf += 1;
   if (trait === "mercantile") inf += 1;
   const occ = g.systems[target]!.occupant;
   if (trait === "parasitic" && (occ !== null || g.systems[target]!.neutrals > 0)) inf += 1;
-  if (g.players[player]!.active!.species === "ossian_prospectors" && def.planets.filter((p) => p === "barren").length >= 2) inf += 1;
+  // Ossian: each Barren system is worth ~half a point via the pairing bonus.
+  if (g.players[player]!.active!.species === "ossian_prospectors" && def.planets.includes("barren")) inf += 0.5;
   // Rough payback horizon: expect to hold for ~2 turns.
   return inf * 2 - cost * 0.55;
 }

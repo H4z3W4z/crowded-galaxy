@@ -24,8 +24,9 @@ export function scoreExpandTurn(g: GameState, player: PlayerId): ScoreLine[] {
     if (habCount > 0) lines.push({ label: "Favored habitat", amount: habCount });
 
     if (civ.species === "ossian_prospectors") {
-      const n = active.filter((id) => SYSTEMS[id]!.planets.filter((pl) => pl === "barren").length >= 2).length;
-      if (n > 0) lines.push({ label: "Ossian: double-Barren systems", amount: n });
+      const barren = active.filter((id) => hasPlanet(id, "barren")).length;
+      const n = Math.floor(barren / 2);
+      if (n > 0) lines.push({ label: "Ossian: paired Barren systems", amount: n });
     }
 
     switch (civ.trait) {
@@ -42,11 +43,9 @@ export function scoreExpandTurn(g: GameState, player: PlayerId): ScoreLine[] {
         if (n > 0) lines.push({ label: "Fortress-Building: Starbases", amount: n });
         break;
       }
-      case "industrious": {
-        const n = active.filter((id) => SYSTEMS[id]!.planets.length >= 3).length;
-        if (n > 0) lines.push({ label: "Industrious: 3-planet systems", amount: n });
+      case "industrious":
+        if (active.length >= 5) lines.push({ label: "Industrious: wide empire", amount: 2 });
         break;
-      }
       case "mercantile":
         if (active.length > 0) lines.push({ label: "Mercantile", amount: active.length });
         break;
@@ -100,7 +99,7 @@ export function scoreRemnants(g: GameState, player: PlayerId): ScoreLine[] {
         }
         break;
       case "ossian_prospectors":
-        if (held.some((id) => SYSTEMS[id]!.planets.length >= 3)) {
+        if (held.filter((id) => hasPlanet(id, "barren")).length >= 2) {
           lines.push({ label: "Ossian Remnant bonus", amount: 1 });
         }
         break;

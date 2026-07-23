@@ -53,7 +53,7 @@ function LegendPanel({ onClose }: { onClose: () => void }) {
 
         <h3 style={{ fontSize: "var(--text-lg)", margin: "22px 0 10px" }}>Planet types</h3>
         <div style={{ fontSize: 13, color: "var(--ink-2)", marginBottom: 10, lineHeight: 1.45 }}>
-          Each system holds 1–3 planets. A species scores +1 Influence from every system it controls that contains at least one of its favored planet types.
+          Every system is a single planet. A species scores +1 Influence from each system it controls whose planet matches its favored type.
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {PLANET_LEGEND.map((p) => (

@@ -66,10 +66,9 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
         const ownerColor = occ ? P_COLORS[occ.player]! : sys.neutrals > 0 ? "var(--neutral-token)" : null;
         const isRemnant = occ?.kind === "remnant";
         const count = occ ? sys.tokens : sys.neutrals;
-        const n = def.planets.length;
         const tipLines = [
           `${def.name} (${code})`,
-          `Planets: ${def.planets.map((p) => p.replace("_", " ")).join(", ")}`,
+          `Planet: ${def.planet.replace("_", " ")}`,
           ...(def.rimGate ? ["Rim Gate — new civilizations may enter here"] : []),
           ...(def.hazard ? ["Hazard — +1 to conquer"] : []),
           ...(def.relic ? ["Relic — some Traits score it"] : []),
@@ -83,30 +82,24 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
           ...(sys.bulwark ? ["Bulwark — cannot be conquered"] : []),
           ...(cost !== undefined ? [`You can conquer this now for ${cost}`] : []),
         ];
+        const ORB = 50; // planet is the system, sized like the old node
         return (
           <g key={code} onClick={() => onSelect(code)} style={{ cursor: "pointer" }}>
             <title>{tipLines.join("\n")}</title>
-            {def.rimGate && <circle cx={pos.x} cy={pos.y} r={37} fill="none" stroke="var(--starlight-2)" strokeWidth={1.5} strokeDasharray="3 6" opacity={0.7} />}
-            {canReach && !isSel && <circle cx={pos.x} cy={pos.y} r={33} fill="none" stroke="var(--p3)" strokeWidth={2.5} strokeDasharray="5 5" opacity={0.9} />}
-            <circle
-              cx={pos.x}
-              cy={pos.y}
-              r={27}
-              fill={isSel ? "var(--space-2)" : "#232045"}
-              stroke={isSel ? "var(--starlight)" : ownerColor || "rgba(239,234,248,.28)"}
-              strokeWidth={isSel ? 3.5 : ownerColor && !isRemnant ? 3 : ownerColor ? 0 : 1.5}
-              style={isSel ? { filter: "drop-shadow(0 0 8px rgba(239,234,248,.8))" } : occ && !isRemnant ? { filter: `drop-shadow(0 0 6px ${ownerColor})` } : undefined}
-            />
-            {isRemnant && <circle cx={pos.x} cy={pos.y} r={27} fill="none" stroke={ownerColor!} strokeWidth={3} strokeDasharray="4 4" />}
-            {sys.bulwark && <circle cx={pos.x} cy={pos.y} r={41} fill="none" stroke="var(--ink)" strokeWidth={2} opacity={0.9} />}
-            {def.planets.map((p, i) => {
-              const px = pos.x + (i - (n - 1) / 2) * 16;
-              return <PlanetOrb key={i} type={p} ring={false} size={17} x={px - 8.5} y={pos.y - 16.5} />;
-            })}
-            <text x={pos.x} y={pos.y + 13} textAnchor="middle" fill="var(--starlight)" style={{ font: "700 11px var(--font-mono)" }}>
+            {def.rimGate && <circle cx={pos.x} cy={pos.y} r={35} fill="none" stroke="var(--starlight-2)" strokeWidth={1.5} strokeDasharray="3 6" opacity={0.65} />}
+            {canReach && !isSel && <circle cx={pos.x} cy={pos.y} r={31} fill="none" stroke="var(--p3)" strokeWidth={2.5} strokeDasharray="5 5" opacity={0.9} />}
+            {sys.bulwark && <circle cx={pos.x} cy={pos.y} r={35} fill="none" stroke="var(--ink)" strokeWidth={2} opacity={0.9} />}
+            {/* The planet itself is the node. */}
+            <PlanetOrb type={def.planet} size={ORB} x={pos.x - ORB / 2} y={pos.y - ORB / 2} style={occ && !isRemnant ? { filter: `drop-shadow(0 0 7px ${ownerColor})` } : undefined} />
+            {/* Ownership ring hugs the planet. */}
+            {occ && !isRemnant && <circle cx={pos.x} cy={pos.y} r={26} fill="none" stroke={ownerColor!} strokeWidth={3} />}
+            {isRemnant && <circle cx={pos.x} cy={pos.y} r={26} fill="none" stroke={ownerColor!} strokeWidth={3} strokeDasharray="4 4" />}
+            {isSel && <circle cx={pos.x} cy={pos.y} r={28} fill="none" stroke="var(--starlight)" strokeWidth={3} style={{ filter: "drop-shadow(0 0 8px rgba(239,234,248,.9))" }} />}
+            {/* Code chip below the planet for legibility over the art. */}
+            <text x={pos.x} y={pos.y + 42} textAnchor="middle" fill="var(--starlight)" style={{ font: "700 12px var(--font-mono)", paintOrder: "stroke", stroke: "var(--space-0)", strokeWidth: 3.5 }}>
               {code}
             </text>
-            <text x={pos.x} y={pos.y + 45} textAnchor="middle" fill="var(--starlight-2)" style={{ font: "10.5px var(--font-body)", letterSpacing: ".02em", paintOrder: "stroke", stroke: "var(--space-0)", strokeWidth: 3 }}>
+            <text x={pos.x} y={pos.y + 56} textAnchor="middle" fill="var(--starlight-2)" style={{ font: "10px var(--font-body)", letterSpacing: ".02em", paintOrder: "stroke", stroke: "var(--space-0)", strokeWidth: 3 }}>
               {def.name}
             </text>
             {canReach && (

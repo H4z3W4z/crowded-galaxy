@@ -28,7 +28,7 @@ The galaxy is too small for everyone.
 
 Each player leads a succession of alien civilizations. Every civilization combines one **Species** with one randomly paired **Trait**, producing combinations such as Aggressive Thalassi, Echoing Cryari Revenants, or Wormhole-Savvy Kharax. An empire expands across connected solar systems, earns Influence, becomes overstretched, and eventually collapses into a weakened **Remnant Empire**. The player then launches a completely new civilization while the old one lingers on the map.
 
-Systems contain one to three planets of different types. A species earns additional Influence in systems containing its favored habitat. Wormholes create long-distance connections, hazards make certain systems harder to capture, and the remains of dead civilizations continue to shape the board.
+Each system is a single planet of one of six types (single-terrain regions, Small World style — changed from multi-planet in v0.4). A species earns additional Influence in each system of its favored type. Wormholes create long-distance connections, hazards make certain systems harder to capture, and the remains of dead civilizations continue to shape the board.
 
 The intended emotional rhythm:
 
@@ -43,12 +43,12 @@ The intended emotional rhythm:
 
 Gameplay fidelity target: **Small World**, as closely as possible. The original material lives in the layers on top:
 
-- **Multi-planet systems:** a system is one territory containing one to three planet icons.
-- **Habitat specialization:** an active civilization earns +1 Influence from each controlled system containing at least one favored planet.
+- **Single-planet systems (v0.4):** each system is one planet of one of six types — single-terrain regions, as in Small World. (Replaced the earlier multi-planet systems, which made abstract circle-nodes; rendering each system as its planet is more legible and closer to the Small World feel.) Five systems of each of the six types.
+- **Habitat specialization:** an active civilization earns +1 Influence from each controlled system whose planet matches its favored type.
 - **Wormhole geography:** three paired wormholes count as adjacency for conquest, defense, powers, and scoring.
 - **Persistent Remnant Empires:** every species has a Remnant ability — simplified in v0.2 to passive scoring or defense so several Remnants on the board stay readable.
 
-Planets are not individually occupied. Conquer the system and you control every planet in it.
+Conquer the system and you control its planet.
 
 ## 3. Components
 

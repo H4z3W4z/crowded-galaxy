@@ -126,9 +126,13 @@ traits:
     name: Industrious
     population: 4
     sw_analog: terrain scoring
-    status: kept
+    status: reworked
     ability: >-
-      Score +1 Influence for each active three-planet system you control.
+      Score +2 Influence if your active empire controls five or more
+      systems.
+    notes: >-
+      v0.4: reworked for single-planet systems (was "+1 per 3-planet
+      system", impossible now). Now a wide-empire threshold bonus.
 
   - id: mercantile
     name: Mercantile

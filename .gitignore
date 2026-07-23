@@ -1,0 +1,22 @@
+# Node / TypeScript (for when the monorepo lands)
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Capacitor / iOS build output (later)
+ios/App/build/
+ios/App/Pods/

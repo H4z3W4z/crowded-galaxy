@@ -1,0 +1,201 @@
+# Crowded Galaxy — Trait roster (canonical card data)
+# Traits are the game's random Special Powers (Small World analog).
+# Edit this file to change traits; the design doc only summarizes it.
+# population: tokens contributed to the combined pool (species + trait).
+# Design rule (v0.2): abilities are unhedged — no "first per turn" rationing.
+# Balance lives in the population value, Small World style.
+#
+# Cut in v0.2: Psionic, Cybernetic (species territory now), Replicating
+# (Kharax owns growth), Ruthless (redundant under Aggressive), Scouting
+# (Quantum Drive covers mobility), Hive-Linked (fiddly for marginal payoff).
+
+schema: crowded-galaxy-traits/1
+version: 0.2
+
+traits:
+  - id: adaptive
+    name: Adaptive
+    population: 2
+    sw_analog: original
+    status: unhedged
+    ability: >-
+      At the start of each Expand turn, choose a second favored habitat
+      for that turn. No cap on the bonus Influence gained from it.
+
+  - id: aggressive
+    name: Aggressive
+    population: 4
+    sw_analog: Commando
+    status: unhedged
+    ability: >-
+      All conquests cost 1 fewer population, minimum 1.
+
+  - id: catalytic
+    name: Catalytic
+    population: 4
+    sw_analog: Alchemist
+    status: new
+    ability: >-
+      Score +2 bonus Influence at the end of each of your turns while this
+      civilization is active.
+
+  - id: ancient
+    name: Ancient
+    population: 4
+    sw_analog: Forest / Hill
+    status: kept
+    ability: >-
+      Score +1 Influence for every Relic system you actively control.
+
+  - id: berserk
+    name: Berserk
+    population: 4
+    sw_analog: Berserk
+    status: new
+    ability: >-
+      Roll the reinforcement die BEFORE each conquest and apply the result
+      as a discount to that conquest's cost, minimum 1.
+
+  - id: colonizing
+    name: Colonizing
+    population: 5
+    sw_analog: Mounted (loose)
+    status: kept
+    ability: >-
+      Empty systems cost 1 fewer population to conquer, minimum 1.
+
+  - id: defensive
+    name: Defensive
+    population: 5
+    sw_analog: Fortified (loose)
+    status: unhedged
+    ability: >-
+      Every system your active civilization controls has +1 defense.
+
+  - id: diplomatic
+    name: Diplomatic
+    population: 5
+    sw_analog: Diplomat
+    status: reworked
+    ability: >-
+      At the end of your turn, name one opponent. That opponent's active
+      civilization cannot attack your active civilization until your next
+      turn. Remnants are not protected.
+    notes: >-
+      Watch in 3-player: immunity from half the table. Candidate rider —
+      cannot name the same opponent on consecutive turns.
+
+  - id: echoing
+    name: Echoing
+    population: 5
+    sw_analog: Spirit
+    status: new
+    ability: >-
+      When this civilization Collapses, your previous Remnant Empire is
+      not removed. You may have two Remnant Empires on the map at once,
+      both scoring, until this civilization's Remnant is itself replaced.
+
+  - id: fortress_building
+    name: Fortress-Building
+    population: 3
+    sw_analog: Fortified
+    status: unhedged
+    ability: >-
+      After redeploying, place one Starbase in an active system, maximum
+      six. Each Starbase adds +1 defense and scores +1 Influence while
+      your civilization is active.
+
+  - id: heroic
+    name: Heroic
+    population: 5
+    sw_analog: Heroic
+    status: new
+    ability: >-
+      After redeploying, place your two Bulwark markers in two active
+      systems. Those systems cannot be conquered. Reposition the markers
+      each turn.
+    notes: >-
+      Two immune systems on a 30-system map is proportionally stronger
+      than Small World's version. Playtest watch-list.
+
+  - id: industrious
+    name: Industrious
+    population: 4
+    sw_analog: terrain scoring
+    status: kept
+    ability: >-
+      Score +1 Influence for each active three-planet system you control.
+
+  - id: mercantile
+    name: Mercantile
+    population: 2
+    sw_analog: Merchant
+    status: reworked
+    ability: >-
+      Score +1 Influence for each system your active civilization
+      controls, doubling your base system scoring.
+    notes: >-
+      Strongest scoring power welded to the weakest body, per Small
+      World's Merchant pricing.
+
+  - id: nomadic
+    name: Nomadic
+    population: 3
+    sw_analog: Halflings (loose)
+    status: unhedged
+    ability: >-
+      Any of your conquests may enter through any Rim Gate, even while you
+      control other systems.
+
+  - id: parasitic
+    name: Parasitic
+    population: 4
+    sw_analog: Pillaging
+    status: unhedged
+    ability: >-
+      Score +1 Influence for each non-empty system you conquered this
+      turn.
+
+  - id: quantum_drive
+    name: Quantum Drive
+    population: 3
+    sw_analog: Flying (restricted)
+    status: unhedged
+    ability: >-
+      Any conquest may target any system on the map that shares a planet
+      type with a system you control, regardless of adjacency.
+
+  - id: stealth
+    name: Stealth
+    population: 4
+    sw_analog: Underworld (loose)
+    status: unhedged
+    ability: >-
+      Ignore all Starbase and Hazard defense modifiers.
+
+  - id: twilight
+    name: Twilight
+    population: 4
+    sw_analog: Stout
+    status: new
+    ability: >-
+      You may Collapse at the end of a normal Expand turn instead of
+      spending a full turn on it.
+
+  - id: wealthy
+    name: Wealthy
+    population: 4
+    sw_analog: Wealthy
+    status: new
+    ability: >-
+      Score +7 bonus Influence at the end of your launch turn. One use.
+
+  - id: wormhole_savvy
+    name: Wormhole-Savvy
+    population: 4
+    sw_analog: Underworld
+    status: unhedged
+    ability: >-
+      All conquests made through a wormhole cost 1 fewer population,
+      minimum 1. During redeployment, population may move freely through
+      wormholes between your active systems.

@@ -23,6 +23,7 @@ import { TraitCard } from "@ds/components/cards/TraitCard.jsx";
 import { ComboSlot } from "@ds/components/cards/ComboSlot.jsx";
 import { PlanetIcon, PLANET_TYPES } from "@ds/components/icons/PlanetIcon.jsx";
 import { DieFace } from "@ds/components/game/DieFace.jsx";
+import { Icon } from "@ds/components/icons/Icon.jsx";
 
 const AI_DELAY_MS = 450;
 const PLANETS: PlanetType[] = ["terran", "ocean", "barren", "gas_giant", "ice", "volcanic"];
@@ -440,18 +441,47 @@ function MarketOverlay({
           {game.config.seats[game.current]!.name} — {p.influence} Influence. Skipping a combo costs 1 Influence per slot passed.
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {game.market.map((slot, i) => (
-            <div key={i} style={{ opacity: i > p.influence ? 0.45 : 1 }}>
-              <ComboSlot
-                species={SPECIES[slot.species]}
-                trait={TRAITS[slot.trait]}
-                influence={slot.influence}
-                free={i === 0}
-                selected={pick === i}
-                onSelect={() => (i <= p.influence ? setPick(pick === i ? null : i) : null)}
-              />
-            </div>
-          ))}
+          {game.market.map((slot, i) => {
+            const sp = SPECIES[slot.species]!;
+            const tr = TRAITS[slot.trait]!;
+            const affordable = i <= p.influence;
+            const pop = sp.population + tr.population;
+            return (
+              <div
+                key={i}
+                style={{
+                  opacity: affordable ? 1 : 0.5,
+                  border: pick === i ? "var(--bw) solid var(--ink)" : "1.5px solid var(--line-mid)",
+                  borderRadius: "var(--r-xl)",
+                  background: pick === i ? "var(--card)" : "transparent",
+                  overflow: "hidden",
+                }}
+              >
+                <ComboSlot
+                  species={sp}
+                  trait={tr}
+                  influence={slot.influence}
+                  free={i === 0}
+                  selected={pick === i}
+                  onSelect={() => (affordable ? setPick(pick === i ? null : i) : undefined)}
+                  style={{ border: "none", background: "transparent", boxShadow: "none", transform: "none" }}
+                />
+                <div style={{ padding: "0 16px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  <Ability icon="sparkles" title={`${tr.name} — power`} text={tr.ability} />
+                  <Ability icon="rocket" title={`${sp.name} — active`} text={sp.active} />
+                  <Ability icon="skull" title="Remnant (after collapse)" text={sp.remnant} />
+                  <div style={{ fontSize: 12, color: "var(--ink-3)", fontFamily: "var(--font-mono)" }}>
+                    {i === 0
+                      ? "Free pick"
+                      : affordable
+                        ? `Costs ${i} Influence to reach`
+                        : `Needs ${i} Influence — you have ${p.influence}`}{" "}
+                    · combined population {pop}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
         <div style={{ marginTop: 14, display: "flex", gap: 10, alignItems: "center" }}>
           <Button variant="gold" size="md" icon="rocket" disabled={pick === null} onClick={() => pick !== null && dispatch({ type: "chooseCivilization", slot: pick })}>
@@ -514,6 +544,20 @@ function SystemSummary({ id }: { id: string }) {
       {def.hazard && <Badge tone="hazard">Hazard</Badge>}
       {def.relic && <Badge tone="relic">Relic</Badge>}
       {def.rimGate && <Badge>Rim gate</Badge>}
+    </div>
+  );
+}
+
+function Ability({ icon, title, text }: { icon: string; title: string; text: string }) {
+  return (
+    <div style={{ display: "flex", gap: 8 }}>
+      <Icon name={icon} size={14} style={{ color: "var(--ink-3)", marginTop: 2, flexShrink: 0 }} />
+      <div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 11, letterSpacing: "var(--tracking-caps)", textTransform: "uppercase", color: "var(--ink-2)" }}>
+          {title}
+        </div>
+        <div style={{ fontSize: 13, lineHeight: 1.4, color: "var(--ink)" }}>{text}</div>
+      </div>
     </div>
   );
 }

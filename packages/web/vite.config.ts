@@ -14,5 +14,11 @@ export default defineConfig({
   },
   server: {
     fs: { allow: [resolve(root, "../..")] },
+    proxy: {
+      "/api": {
+        target: "http://localhost:8787",
+        ws: true,
+      },
+    },
   },
 });

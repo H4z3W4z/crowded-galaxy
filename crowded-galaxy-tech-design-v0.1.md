@@ -170,6 +170,8 @@ Threat model is casual (friends-first, no money), but hygiene is free:
 | --- | --- | --- |
 | **M0 — Engine** | `packages/engine` complete with all 32 cards, map, full turn loop | 100% of rules in v0.2 doc enforced; golden-replay + property tests green; a scripted 3-player game runs headless to completion |
 | **M1 — Server + playable web game** | Fastify server (auth, tables, event-sourced games, WebSocket live play, Web Push nudges) + React board client | Two humans on separate devices finish a 12-round game, both live in one sitting and async across sessions; this is the first real playtest vehicle |
+
+> **M1 implementation notes (shipped):** magic-link auth uses a console/dev-link provider — swap in a real email service before any non-LAN deployment. Clients receive full sanitized state pushes (rngState zeroed, decks stripped) rather than replaying the action log locally; the append-only `game_actions` log still exists for audit/replay tooling. Lobby freshness is 2s polling (game channel is WS). **Deferred to M1.5:** Web Push "your turn" nudges, catch-up turn animations, per-turn action batching (actions submit individually).
 | **M2 — AI seats** | Heuristic AI filling seats, self-play harness | One human beats/loses to two AIs in a complete game without illegal moves or stalls |
 | **M3 — Polish + iOS shell** | Replay/catch-up animations, Capacitor build, APNs, TestFlight | External friend playtest group runs games unassisted |
 

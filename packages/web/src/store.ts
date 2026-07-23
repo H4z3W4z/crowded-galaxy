@@ -8,13 +8,29 @@ import {
   type GameState,
   RulesError,
 } from "@cg/engine";
+import { api, ApiError, openGameSocket, type Me } from "./api";
+
+export type Screen = "home" | "localSetup" | "game" | "login" | "tables" | "lobby";
 
 interface Store {
+  screen: Screen;
+  me: Me | null;
   game: GameState | null;
-  history: GameState[]; // for undo (hotseat misclick insurance)
+  history: GameState[]; // for undo (hotseat misclick insurance; local mode only)
   error: string | null;
   selected: string | null;
+  // Online mode
+  mode: "local" | "online";
+  onlineGameId: string | null;
+  mySeat: number | null;
+  lobbyTableId: string | null;
+  closeSocket: (() => void) | null;
+  setScreen: (s: Screen) => void;
+  setMe: (me: Me | null) => void;
+  openLobby: (tableId: string) => void;
   start: (seats: GameConfig["seats"], rounds: number) => void;
+  openOnlineGame: (gameId: string) => Promise<void>;
+  leaveOnlineGame: () => void;
   dispatch: (action: Action) => boolean;
   undo: () => void;
   select: (id: string | null) => void;
@@ -23,19 +39,73 @@ interface Store {
 }
 
 export const useStore = create<Store>((set, get) => ({
+  screen: "home",
+  me: null,
   game: null,
   history: [],
   error: null,
   selected: null,
+  mode: "local",
+  onlineGameId: null,
+  mySeat: null,
+  lobbyTableId: null,
+  closeSocket: null,
+
+  setScreen: (screen) => set({ screen }),
+  setMe: (me) => set({ me }),
+  openLobby: (tableId) => set({ lobbyTableId: tableId, screen: "lobby" }),
 
   start: (seats, rounds) => {
     const seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
-    set({ game: createGame({ ...DEFAULT_CONFIG, rounds, seats, seed }), history: [], error: null, selected: null });
+    set({
+      mode: "local",
+      game: createGame({ ...DEFAULT_CONFIG, rounds, seats, seed }),
+      history: [],
+      error: null,
+      selected: null,
+      screen: "game",
+    });
+  },
+
+  openOnlineGame: async (gameId) => {
+    get().closeSocket?.();
+    const res = await api.getGame(gameId);
+    const close = openGameSocket(gameId, (state) => {
+      if (get().onlineGameId === gameId) set({ game: state });
+    });
+    set({
+      mode: "online",
+      onlineGameId: gameId,
+      mySeat: res.mySeat,
+      game: res.state,
+      history: [],
+      error: null,
+      selected: null,
+      screen: "game",
+      closeSocket: close,
+    });
+  },
+
+  leaveOnlineGame: () => {
+    get().closeSocket?.();
+    set({ mode: "local", onlineGameId: null, mySeat: null, game: null, closeSocket: null, screen: "tables" });
   },
 
   dispatch: (action) => {
-    const { game, history } = get();
+    const { game, history, mode, onlineGameId } = get();
     if (!game) return false;
+    if (mode === "online") {
+      if (!onlineGameId) return false;
+      api
+        .submitAction(onlineGameId, action)
+        .then(({ state }) => {
+          if (get().onlineGameId === onlineGameId) set({ game: state, error: null, selected: null });
+        })
+        .catch((e) => {
+          set({ error: e instanceof ApiError ? e.message : "connection lost" });
+        });
+      return true;
+    }
     try {
       const next = apply(game, action);
       set({ game: next, history: [...history.slice(-30), game], error: null, selected: null });
@@ -62,5 +132,12 @@ export const useStore = create<Store>((set, get) => ({
 
   select: (id) => set({ selected: id }),
   clearError: () => set({ error: null }),
-  reset: () => set({ game: null, history: [], error: null, selected: null }),
+  reset: () => {
+    const { mode } = get();
+    if (mode === "online") {
+      get().leaveOnlineGame();
+      return;
+    }
+    set({ game: null, history: [], error: null, selected: null, screen: "home" });
+  },
 }));

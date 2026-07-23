@@ -37,18 +37,21 @@ export function Game() {
   const error = useStore((s) => s.error);
   const clearError = useStore((s) => s.clearError);
 
+  const mode = useStore((s) => s.mode);
+  const mySeat = useStore((s) => s.mySeat);
   const player = game.current;
   const seat = game.config.seats[player]!;
   const p = game.players[player]!;
-  const isAI = seat.ai;
+  // "waiting" = this device may not act right now (AI turn locally, or someone else online).
+  const isAI = mode === "local" ? seat.ai : mySeat === null || player !== mySeat;
   const over = game.phase === "over";
 
-  // AI autoplay.
+  // AI autoplay — local mode only; online, the server plays AI seats.
   useEffect(() => {
-    if (!isAI || over) return;
+    if (mode !== "local" || !seat.ai || over) return;
     const t = setTimeout(() => dispatch(aiNextAction(game)), AI_DELAY_MS);
     return () => clearTimeout(t);
-  }, [game, isAI, over, dispatch]);
+  }, [game, seat.ai, over, dispatch, mode]);
 
   // Error toast auto-clear.
   useEffect(() => {
@@ -91,7 +94,7 @@ export function Game() {
         ) : isAI ? (
           <Panel surface="inset" pad="14px">
             <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--ink-2)" }}>
-              <span className="cg-spin" /> {seat.name} is thinking…
+              <span className="cg-spin" /> {seat.ai ? `${seat.name} is thinking…` : `Waiting for ${seat.name}…`}
             </div>
           </Panel>
         ) : (
@@ -101,9 +104,14 @@ export function Game() {
           </>
         )}
         <Log game={game} />
-        {!over && !isAI && (
+        {!over && !isAI && mode === "local" && (
           <Button variant="ghost" size="sm" icon="chevron-left" onClick={undo}>
             Undo
+          </Button>
+        )}
+        {mode === "online" && (
+          <Button variant="ghost" size="sm" icon="door-open" onClick={reset}>
+            Leave game (keeps running)
           </Button>
         )}
       </div>
@@ -444,7 +452,7 @@ function GameOver({ game, onAgain }: { game: NonNullable<ReturnType<typeof useSt
         ))}
       </div>
       <Button variant="gold" icon="rocket" onClick={onAgain}>
-        New game
+        Done
       </Button>
     </Panel>
   );

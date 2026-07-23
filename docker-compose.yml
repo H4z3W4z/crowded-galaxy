@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: crowded-galaxy-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cg
+      POSTGRES_PASSWORD: cg_dev_password
+      POSTGRES_DB: crowded_galaxy
+    ports:
+      - "5433:5432"
+    volumes:
+      - cg_pgdata:/var/lib/postgresql/data
+
+volumes:
+  cg_pgdata:

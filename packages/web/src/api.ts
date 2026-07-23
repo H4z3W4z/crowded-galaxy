@@ -59,12 +59,49 @@ export const api = {
     req<{ state: GameState }>(`/api/games/${id}/actions`, { method: "POST", body: JSON.stringify({ action }) }),
 };
 
-export function openGameSocket(gameId: string, onState: (s: GameState) => void): () => void {
+export type ConnState = "connecting" | "live" | "reconnecting";
+
+/**
+ * Live game socket with automatic reconnect. The server only pushes on new
+ * actions, so on every (re)open we also pull current state via GET — that closes
+ * the window where an action landed while the socket was down.
+ */
+export function openGameSocket(
+  gameId: string,
+  onState: (s: GameState) => void,
+  onStatus?: (s: ConnState) => void,
+): () => void {
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${proto}://${location.host}/api/games/${gameId}/live`);
-  ws.onmessage = (ev) => {
-    const msg = JSON.parse(ev.data as string) as { type: string; state?: GameState };
-    if (msg.type === "state" && msg.state) onState(msg.state);
+  let closed = false;
+  let ws: WebSocket | null = null;
+  let retry = 0;
+
+  const connect = () => {
+    if (closed) return;
+    onStatus?.(retry === 0 ? "connecting" : "reconnecting");
+    ws = new WebSocket(`${proto}://${location.host}/api/games/${gameId}/live`);
+    ws.onopen = () => {
+      retry = 0;
+      onStatus?.("live");
+      // Reconcile any actions missed while disconnected.
+      api.getGame(gameId).then((r) => !closed && onState(r.state)).catch(() => {});
+    };
+    ws.onmessage = (ev) => {
+      const msg = JSON.parse(ev.data as string) as { type: string; state?: GameState };
+      if (msg.type === "state" && msg.state) onState(msg.state);
+    };
+    ws.onclose = () => {
+      if (closed) return;
+      onStatus?.("reconnecting");
+      retry += 1;
+      setTimeout(connect, Math.min(1000 * retry, 5000));
+    };
+    ws.onerror = () => ws?.close();
   };
-  return () => ws.close();
+  connect();
+
+  return () => {
+    closed = true;
+    ws?.close();
+  };
 }

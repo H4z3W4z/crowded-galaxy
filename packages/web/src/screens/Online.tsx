@@ -101,6 +101,8 @@ export function Tables() {
   const [tables, setTables] = useState<Omit<TableInfo, "seats">[]>([]);
   const [code, setCode] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [seatCount, setSeatCount] = useState(3);
+  const [rounds, setRounds] = useState(12);
 
   async function refresh() {
     const r = await api.myTables();
@@ -111,7 +113,7 @@ export function Tables() {
   }, []);
 
   async function create() {
-    const { table } = await api.createTable(3, 12);
+    const { table } = await api.createTable(seatCount, rounds);
     openLobby(table.id);
   }
 
@@ -127,6 +129,20 @@ export function Tables() {
 
   return (
     <Shell title="Online tables" back={() => setScreen("home")}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 12, letterSpacing: "var(--tracking-caps)", textTransform: "uppercase", color: "var(--ink-3)" }}>Seats</span>
+        {[2, 3, 4, 5].map((n) => (
+          <Button key={n} variant={seatCount === n ? "primary" : "secondary"} size="sm" onClick={() => setSeatCount(n)}>
+            {n}
+          </Button>
+        ))}
+        <span style={{ marginLeft: 8, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 12, letterSpacing: "var(--tracking-caps)", textTransform: "uppercase", color: "var(--ink-3)" }}>Rounds</span>
+        {[9, 10, 12].map((n) => (
+          <Button key={n} variant={rounds === n ? "primary" : "secondary"} size="sm" onClick={() => setRounds(n)}>
+            {n}
+          </Button>
+        ))}
+      </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
         <Button variant="gold" icon="plus" onClick={create}>
           New table

@@ -79,6 +79,7 @@ export function Game() {
     <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
         <MapView game={game} selected={selected} reachable={reachable} onSelect={(id) => select(selected === id ? null : id)} />
+        {mode === "online" && <ConnBadge />}
         {error && (
           <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", background: "var(--pt-volcanic)", color: "var(--paper-0)", border: "var(--bw) solid var(--ink)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-chunk)", padding: "10px 18px", fontFamily: "var(--font-display)", fontWeight: 700 }}>
             {error}
@@ -116,7 +117,17 @@ export function Game() {
         )}
       </div>
 
-      {needsMarket && <MarketOverlay game={game} />}
+      {needsMarket && <MarketOverlay game={game} online={mode === "online"} onLeave={reset} />}
+    </div>
+  );
+}
+
+function ConnBadge() {
+  const conn = useStore((s) => s.conn);
+  if (conn === "live") return null;
+  return (
+    <div style={{ position: "absolute", top: 12, left: 12, background: "var(--paper-2)", border: "1.5px solid var(--line-mid)", borderRadius: "var(--r-pill)", padding: "4px 12px", fontSize: 12, color: "var(--ink-2)", display: "flex", alignItems: "center", gap: 6 }}>
+      <span className="cg-spin" style={{ width: 11, height: 11 }} /> {conn === "connecting" ? "Connecting…" : "Reconnecting…"}
     </div>
   );
 }
@@ -402,14 +413,29 @@ function RedeployControls({ game }: { game: NonNullable<ReturnType<typeof useSto
   );
 }
 
-function MarketOverlay({ game }: { game: NonNullable<ReturnType<typeof useStore.getState>["game"]> }) {
+function MarketOverlay({
+  game,
+  online,
+  onLeave,
+}: {
+  game: NonNullable<ReturnType<typeof useStore.getState>["game"]>;
+  online: boolean;
+  onLeave: () => void;
+}) {
   const dispatch = useStore((s) => s.dispatch);
   const p = game.players[game.current]!;
   const [pick, setPick] = useState<number | null>(null);
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(7,6,18,.72)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 40 }}>
       <Panel surface="paper" style={{ width: 700, maxWidth: "96vw", maxHeight: "92vh", overflowY: "auto" }}>
-        <h2 style={{ fontSize: "var(--display-sm)", marginBottom: 2 }}>Choose your next civilization</h2>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 2 }}>
+          <h2 style={{ fontSize: "var(--display-sm)", flex: 1 }}>Choose your next civilization</h2>
+          {online && (
+            <Button variant="ghost" size="sm" icon="door-open" onClick={onLeave}>
+              Leave
+            </Button>
+          )}
+        </div>
         <div style={{ color: "var(--ink-2)", marginBottom: 14 }}>
           {game.config.seats[game.current]!.name} — {p.influence} Influence. Skipping a combo costs 1 Influence per slot passed.
         </div>

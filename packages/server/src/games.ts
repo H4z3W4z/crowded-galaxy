@@ -1,6 +1,5 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { RulesError } from "@cg/engine";
 import type { Action } from "@cg/engine";
 import { requireUser } from "./auth.js";
 import { loadGame, sanitize, submitAction } from "./gameStore.js";
@@ -48,20 +47,13 @@ export function registerGameRoutes(app: FastifyInstance): void {
     const user = await requireUser(req, reply);
     if (!user) return;
     const { id } = z.object({ id: z.string() }).parse(req.params);
-    const action = actionSchema.parse((req.body as { action: unknown }).action);
-    const game = await loadGame(id);
-    if (!game) return reply.code(404).send({ error: "no such game" });
-    if (game.state.phase === "over") return reply.code(400).send({ error: "game is over" });
-    const seatUser = game.seatUsers[game.state.current];
-    if (seatUser !== user.id) return reply.code(403).send({ error: "not your turn" });
-    try {
-      await submitAction(game, action);
-    } catch (e) {
-      if (e instanceof RulesError) return reply.code(409).send({ error: e.message });
-      throw e;
-    }
-    const state = sanitize(game.state);
-    broadcastGame(game.id, state);
+    const action = actionSchema.parse((req.body as { action?: unknown } | undefined)?.action);
+    // All turn/seat/legality enforcement AND persistence happen atomically under a
+    // row lock inside submitAction — the route just maps the typed result to HTTP.
+    const result = await submitAction(id, user.id, action);
+    if (!result.ok) return reply.code(result.code).send({ error: result.error });
+    const state = sanitize(result.state);
+    broadcastGame(id, state);
     return reply.send({ state });
   });
 }

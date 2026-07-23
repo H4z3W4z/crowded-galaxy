@@ -5,6 +5,7 @@ import Fastify from "fastify";
 import cookie from "@fastify/cookie";
 import websocket from "@fastify/websocket";
 import fastifyStatic from "@fastify/static";
+import { ZodError } from "zod";
 import { initDb } from "./db.js";
 import { registerAuthRoutes } from "./auth.js";
 import { registerTableRoutes } from "./tables.js";
@@ -15,6 +16,19 @@ const PORT = Number(process.env.PORT ?? 8787);
 const HOST = process.env.HOST ?? "0.0.0.0"; // LAN playtests by default
 
 const app = Fastify({ logger: { level: "info" } });
+
+// One error boundary: malformed input -> 400 (no schema/DB internals leaked);
+// anything unexpected -> a generic 500 with the detail logged server-side only.
+app.setErrorHandler((err, _req, reply) => {
+  if (err instanceof ZodError || (err as { validation?: unknown }).validation) {
+    return reply.code(400).send({ error: "invalid request" });
+  }
+  if (typeof err.statusCode === "number" && err.statusCode < 500) {
+    return reply.code(err.statusCode).send({ error: err.message });
+  }
+  app.log.error(err);
+  return reply.code(500).send({ error: "internal error" });
+});
 
 await app.register(cookie);
 await app.register(websocket);

@@ -8,7 +8,7 @@ import {
   type GameState,
   RulesError,
 } from "@cg/engine";
-import { api, ApiError, openGameSocket, type Me } from "./api";
+import { api, ApiError, openGameSocket, type ConnState, type Me } from "./api";
 
 export type Screen = "home" | "localSetup" | "game" | "login" | "tables" | "lobby";
 
@@ -25,6 +25,7 @@ interface Store {
   mySeat: number | null;
   lobbyTableId: string | null;
   closeSocket: (() => void) | null;
+  conn: ConnState;
   setScreen: (s: Screen) => void;
   setMe: (me: Me | null) => void;
   openLobby: (tableId: string) => void;
@@ -50,6 +51,7 @@ export const useStore = create<Store>((set, get) => ({
   mySeat: null,
   lobbyTableId: null,
   closeSocket: null,
+  conn: "connecting",
 
   setScreen: (screen) => set({ screen }),
   setMe: (me) => set({ me }),
@@ -70,9 +72,15 @@ export const useStore = create<Store>((set, get) => ({
   openOnlineGame: async (gameId) => {
     get().closeSocket?.();
     const res = await api.getGame(gameId);
-    const close = openGameSocket(gameId, (state) => {
-      if (get().onlineGameId === gameId) set({ game: state });
-    });
+    const close = openGameSocket(
+      gameId,
+      (state) => {
+        if (get().onlineGameId === gameId) set({ game: state });
+      },
+      (conn) => {
+        if (get().onlineGameId === gameId) set({ conn });
+      },
+    );
     set({
       mode: "online",
       onlineGameId: gameId,
@@ -83,6 +91,7 @@ export const useStore = create<Store>((set, get) => ({
       selected: null,
       screen: "game",
       closeSocket: close,
+      conn: "connecting",
     });
   },
 

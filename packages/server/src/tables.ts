@@ -64,6 +64,10 @@ export function registerTableRoutes(app: FastifyInstance): void {
     const { id } = z.object({ id: z.string() }).parse(req.params);
     const table = await tableDetail(id);
     if (!table) return reply.code(404).send({ error: "no such table" });
+    // Scope table reads (which expose the invite code + seat occupants) to
+    // participants only. Outsiders join via the code, not by reading a table id.
+    const seated = (table.seats as { user_id: string | null }[]).some((s) => s.user_id === user.id);
+    if (table.host_id !== user.id && !seated) return reply.code(404).send({ error: "no such table" });
     return reply.send({ table });
   });
 
@@ -83,15 +87,21 @@ export function registerTableRoutes(app: FastifyInstance): void {
       [id, user.id],
     );
     if (seated.rowCount === 0) {
-      const free = await pool.query(
-        `SELECT seat_idx FROM table_seats WHERE table_id = $1 AND user_id IS NULL ORDER BY seat_idx LIMIT 1`,
-        [id],
+      // Atomic claim of ONE open, human-designated seat (ai = false, unclaimed).
+      // The FOR UPDATE SKIP LOCKED subquery routes concurrent joiners to distinct
+      // seats, and the guarded UPDATE means a returned row is a real, exclusive claim.
+      const claim = await pool.query(
+        `UPDATE table_seats SET user_id = $2, name = $3
+         WHERE table_id = $1 AND seat_idx = (
+           SELECT seat_idx FROM table_seats
+           WHERE table_id = $1 AND user_id IS NULL AND ai = false
+           ORDER BY seat_idx LIMIT 1
+           FOR UPDATE SKIP LOCKED
+         )
+         RETURNING seat_idx`,
+        [id, user.id, user.name],
       );
-      if (free.rowCount === 0) return reply.code(400).send({ error: "table is full" });
-      await pool.query(
-        `UPDATE table_seats SET user_id = $3, ai = false, name = $4 WHERE table_id = $1 AND seat_idx = $2`,
-        [id, (free.rows[0] as { seat_idx: number }).seat_idx, user.id, user.name],
-      );
+      if (claim.rowCount === 0) return reply.code(400).send({ error: "no open seat — ask the host to open one" });
     }
     return reply.send({ table: await tableDetail(id) });
   });
@@ -138,6 +148,13 @@ export function registerTableRoutes(app: FastifyInstance): void {
     const row = t.rows[0] as { host_id: string; status: string; rounds: number };
     if (row.host_id !== user.id) return reply.code(403).send({ error: "host only" });
     if (row.status !== "lobby") return reply.code(400).send({ error: "already started" });
+    // Atomically claim the right to start: only one concurrent starter wins the
+    // lobby->starting transition, so a double-click can't spawn orphaned games.
+    const claim = await pool.query(
+      `UPDATE game_tables SET status = 'starting' WHERE id = $1 AND status = 'lobby' RETURNING rounds`,
+      [id],
+    );
+    if (claim.rowCount === 0) return reply.code(400).send({ error: "already started" });
     const seatRows = await pool.query(
       `SELECT seat_idx, user_id, ai, name FROM table_seats WHERE table_id = $1 ORDER BY seat_idx`,
       [id],
@@ -148,7 +165,11 @@ export function registerTableRoutes(app: FastifyInstance): void {
       ai: s.ai || s.user_id === null,
       userId: s.user_id,
     }));
-    if (!seats.some((s) => !s.ai)) return reply.code(400).send({ error: "need at least one human" });
+    if (!seats.some((s) => !s.ai)) {
+      // Revert the claim so the host can fix the table and retry.
+      await pool.query(`UPDATE game_tables SET status = 'lobby' WHERE id = $1`, [id]);
+      return reply.code(400).send({ error: "need at least one human" });
+    }
     const game = await createGameForTable(id, row.rounds, seats);
     await pool.query(`UPDATE game_tables SET status = 'playing', game_id = $2 WHERE id = $1`, [id, game.id]);
     return reply.send({ gameId: game.id });

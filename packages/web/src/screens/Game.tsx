@@ -446,38 +446,46 @@ function MarketOverlay({
             const tr = TRAITS[slot.trait]!;
             const affordable = i <= p.influence;
             const pop = sp.population + tr.population;
+            const toggle = () => (affordable ? setPick(pick === i ? null : i) : undefined);
             return (
               <div
                 key={i}
+                role="button"
+                tabIndex={affordable ? 0 : -1}
+                onClick={toggle}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && toggle()}
                 style={{
                   opacity: affordable ? 1 : 0.5,
                   border: pick === i ? "var(--bw) solid var(--ink)" : "1.5px solid var(--line-mid)",
                   borderRadius: "var(--r-xl)",
                   background: pick === i ? "var(--card)" : "transparent",
+                  boxShadow: pick === i ? "var(--shadow-pop)" : "none",
                   overflow: "hidden",
+                  cursor: affordable ? "pointer" : "not-allowed",
                 }}
               >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 0" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-3)" }}>Population {pop}</span>
+                  {i === 0 ? (
+                    <Badge tone="positive" icon="check">Free pick</Badge>
+                  ) : affordable ? (
+                    <Badge tone="gold" icon="star">{i} Influence to pick</Badge>
+                  ) : (
+                    <Badge tone="hazard" icon="star">Need {i} — you have {p.influence}</Badge>
+                  )}
+                </div>
                 <ComboSlot
                   species={sp}
                   trait={tr}
                   influence={slot.influence}
-                  free={i === 0}
+                  free={false}
                   selected={pick === i}
-                  onSelect={() => (affordable ? setPick(pick === i ? null : i) : undefined)}
                   style={{ border: "none", background: "transparent", boxShadow: "none", transform: "none" }}
                 />
                 <div style={{ padding: "0 16px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
                   <Ability icon="sparkles" title={`${tr.name} — power`} text={tr.ability} />
                   <Ability icon="rocket" title={`${sp.name} — active`} text={sp.active} />
                   <Ability icon="skull" title="Remnant (after collapse)" text={sp.remnant} />
-                  <div style={{ fontSize: 12, color: "var(--ink-3)", fontFamily: "var(--font-mono)" }}>
-                    {i === 0
-                      ? "Free pick"
-                      : affordable
-                        ? `Costs ${i} Influence to reach`
-                        : `Needs ${i} Influence — you have ${p.influence}`}{" "}
-                    · combined population {pop}
-                  </div>
                 </div>
               </div>
             );

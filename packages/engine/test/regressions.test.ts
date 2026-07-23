@@ -15,6 +15,7 @@ import type { GameConfig, GameState } from "../src/types.js";
 function config(seed: number, seats = 2): GameConfig {
   return {
     ...DEFAULT_CONFIG,
+    startingInfluence: 0, // exact-value assertions below assume an empty starting bank
     seed,
     seats: Array.from({ length: seats }, (_, i) => ({ name: `P${i + 1}`, ai: true })),
   };
@@ -90,6 +91,27 @@ describe("panel bugs 2/4/7: Pelagic conversion holes", () => {
     g = apply(g, { type: "chooseCivilization", slot: 0 });
     g = apply(g, { type: "conquer", target: "CW" });
     expect(conversionTargets(g, 1)).not.toContain("AR");
+  });
+});
+
+describe("iPad bug: turn-1 market has agency (Small World starting coins)", () => {
+  it("players start with 5 Influence by default and can skip on turn 1", () => {
+    const g = createGame({
+      ...DEFAULT_CONFIG,
+      seed: 60,
+      seats: [
+        { name: "A", ai: false },
+        { name: "B", ai: true },
+      ],
+    });
+    expect(g.players[0]!.influence).toBe(5);
+    // Reaching slot 3 costs 3 (one Influence per skipped combo) — affordable at 5.
+    const after = apply(g, { type: "chooseCivilization", slot: 3 });
+    expect(after.players[0]!.influence).toBe(2); // 5 - 3 skipped; chosen combo had 0 banked
+    expect(after.players[0]!.active).not.toBeNull();
+    expect(after.market[0]!.influence).toBe(1); // a coin landed on each skipped combo
+    expect(after.market[1]!.influence).toBe(1);
+    expect(after.market[2]!.influence).toBe(1);
   });
 });
 

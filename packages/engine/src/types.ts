@@ -14,6 +14,7 @@ export interface GameConfig {
   marketSize: number; // 6
   dieFaces: number[]; // [0, 0, 0, 1, 2, 3]
   neutralScale: number; // 1 = seeding as authored in map.yaml, 0 = none
+  startingInfluence: number; // Small World gives 5 starting coins so turn 1 has market agency
 }
 
 export interface MarketSlot {

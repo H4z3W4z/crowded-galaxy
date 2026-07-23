@@ -13,6 +13,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: true, // bind 0.0.0.0 so other LAN devices (iPad, etc.) can reach the dev server
     fs: { allow: [resolve(root, "../..")] },
     proxy: {
       "/api": {

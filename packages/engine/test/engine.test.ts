@@ -16,6 +16,7 @@ import type { GameConfig, GameState } from "../src/types.js";
 function config(seed: number, seats = 3): GameConfig {
   return {
     ...DEFAULT_CONFIG,
+    startingInfluence: 0, // exact-value assertions below assume an empty starting bank
     seed,
     seats: Array.from({ length: seats }, (_, i) => ({ name: `P${i + 1}`, ai: true })),
   };

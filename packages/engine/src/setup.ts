@@ -9,6 +9,7 @@ export const DEFAULT_CONFIG: Omit<GameConfig, "seats" | "seed"> = {
   marketSize: 6,
   dieFaces: [0, 0, 0, 1, 2, 3],
   neutralScale: 1,
+  startingInfluence: 5, // Small World-style starting coins — enables skipping in the row from turn 1
 };
 
 export function createGame(config: GameConfig): GameState {
@@ -48,7 +49,7 @@ export function createGame(config: GameConfig): GameState {
     speciesDiscard: [],
     traitDiscard: [],
     players: config.seats.map(() => ({
-      influence: 0,
+      influence: config.startingInfluence,
       active: null,
       remnants: [],
       diplomaticTarget: null,

@@ -91,7 +91,7 @@ Each system shows: a name and two-letter code, one to three planet icons, hyperl
 1. Place the map and round marker. Baseline: 12 rounds (see Section 11 — this number is under test).
 2. **Seed neutral defenders:** 1 neutral token in each of the 12 middle-ring systems, 1 in each of the 5 inner-ring systems, 2 in Blue Silence. The outer rim starts empty. Neutrals never move, never score, add +1 conquest cost per token, and are removed from the game when conquered.
 3. Shuffle the Species and Trait decks separately. Fill six market slots, each with one Species and one Trait.
-4. Each player starts at 0 Influence. Random first player, clockwise play.
+4. **Each player starts with 5 Influence** (Small World-style starting coins). This gives real market agency on turn 1 — you may spend down the row immediately instead of being forced onto the free top combo. Configurable via `startingInfluence`. Random first player, clockwise play.
 
 ### Choosing a civilization
 

@@ -39,12 +39,20 @@ species:
 
   - id: heliox_aerostats
     name: Heliox Aerostats
-    population: 6
+    population: 4
     habitat: gas_giant
     sw_analog: Giants
-    status: unhedged
+    status: reworked
     active: >-
-      Gas Giant systems cost 1 fewer population to conquer, minimum 1.
+      You may conquer any Gas Giant system on the map, whether or not it is
+      adjacent to your empire. Pay the normal cost.
+    notes: >-
+      v0.6: was "Gas Giant systems cost 1 fewer" — mechanically the same card
+      as Thalassi Compact with a different terrain word, and the scattered Gas
+      Giants made it the weakest species. The atmospheric network turns that
+      scattering into the whole point. Population 6 -> 4: the network is a very
+      loud ability, so it buys a small body (measured: pop 6 put it 2nd at
+      51.4, pop 4 puts it mid-table at 44.0).
     remnant: >-
       Remnant tokens in Gas Giant systems count as two population when
       calculating conquest cost against them.

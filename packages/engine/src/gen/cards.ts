@@ -28,9 +28,9 @@ export const SPECIES: Record<string, SpeciesDef> = {
   "heliox_aerostats": {
     "id": "heliox_aerostats",
     "name": "Heliox Aerostats",
-    "population": 6,
+    "population": 4,
     "habitat": "gas_giant",
-    "active": "Gas Giant systems cost 1 fewer population to conquer, minimum 1.",
+    "active": "You may conquer any Gas Giant system on the map, whether or not it is adjacent to your empire. Pay the normal cost.",
     "remnant": "Remnant tokens in Gas Giant systems count as two population when calculating conquest cost against them."
   },
   "jovian_reavers": {

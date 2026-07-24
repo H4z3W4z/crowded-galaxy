@@ -94,6 +94,9 @@ export function checkConquest(g: GameState, player: PlayerId, target: SystemId):
     }
     // Nomadic: any conquest may enter through any Rim Gate.
     if (!reachable && trait === "nomadic" && def.rimGate) reachable = true;
+    // Heliox Aerostats: the atmospheric network — the drifting cities reach any
+    // Gas Giant in the galaxy, so scattered Gas Giants are an asset, not a problem.
+    if (!reachable && species === "heliox_aerostats" && def.planet === "gas_giant") reachable = true;
     // Quantum Drive: shared planet type with any controlled system, adjacency-free.
     if (!reachable && trait === "quantum_drive") {
       reachable = origins.some((o) => g.map.systems[o]!.planets.some((p) => def.planets.includes(p)));
@@ -143,7 +146,6 @@ export function conquestCost(g: GameState, player: PlayerId, target: SystemId, v
   // Attacker discounts.
   const empty = !occ && sys.neutrals === 0;
   if (civ.species === "thalassi_compact" && hasPlanet(g, target, "ocean")) cost -= 1;
-  if (civ.species === "heliox_aerostats" && hasPlanet(g, target, "gas_giant")) cost -= 1;
   if (civ.trait === "aggressive") cost -= 1;
   if (civ.trait === "colonizing" && empty) cost -= 1;
   if (civ.trait === "wormhole_savvy" && viaWormhole) cost -= 1;

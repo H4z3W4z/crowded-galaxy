@@ -162,7 +162,7 @@
     <h1>CROWDED<br><span class="stroke">GALAXY</span></h1>
     <div class="tag">The galaxy is too small for everyone.</div>
     <p class="lede">A fast game of area control where you lead a succession of alien civilizations — each one rises across the spiral, overreaches, and collapses into a haunting Remnant while you launch the next. This guide explains every piece on the board.</p>
-    <div class="badge"><span class="dot"></span> 2–5 players · 12 rounds · ~25 min</div>
+    <div class="badge"><span class="dot"></span> 2–5 players · 9–12 rounds · ~25 min</div>
   </div>
 </div>
 
@@ -178,8 +178,8 @@
     <div class="sec-head"><h2>The spiral</h2><span class="rule"></span></div>
     <div class="split">
       <div>
-        <p>The galaxy is <strong>five spiral arms</strong> wound around a dense, heavily defended <strong>core</strong> — one arm for every core world. New civilizations enter at the <strong>Rim Gates</strong> on the outer frontier and push inward.</p>
-        <p>The core holds four of the five <strong>Relics</strong> \u2014 and Relics score for whoever holds them, which is what makes the centre the contested prize — but the arms are corridors, so reaching it means fighting through chokepoints. A ring of lateral lanes joins the five inner-arm worlds, making the approach to the core a crossroads rather than five separate spokes. <strong>Wormholes</strong> (the magenta arcs) are the only fast way across the galaxy, which makes the worlds they touch worth fighting for.</p>
+        <p><strong>Every game generates a new galaxy</strong> — different worlds, terrain, names and shortcuts each time. The shape is always five spiral arms wound around a dense, heavily defended <strong>core</strong>, one arm per core world. New civilizations enter at the <strong>Rim Gates</strong> on the outer frontier and push inward.</p>
+        <p>The core holds four of the five <strong>Relics</strong> — and Relics score for whoever holds them, which is what makes the centre the contested prize — but the arms are corridors, so reaching it means fighting through chokepoints. A ring of lateral lanes joins the five inner-arm worlds, making the approach to the core a crossroads rather than five separate spokes. <strong>Wormholes</strong> (the magenta arcs) are the only fast way across the galaxy, which makes the worlds they touch worth fighting for.</p>
         <p class="note">Arm tips are near dead-ends — one neighbor, sometimes one wormhole. Easy to defend, slow to escape.</p>
       </div>
       <div class="card board-chip" style="padding:10px;">
@@ -205,10 +205,12 @@
     <p class="intro">On your turn you either <strong>Expand</strong> your civilization, or <strong>Collapse</strong> it. An Expand turn runs in four beats:</p>
     <div class="card">
       <div class="steps">
-        <div class="step"><div class="k">1 · Recall</div><div class="v"><h3>Gather your strength</h3><p>Pull spare population off your systems back into your hand (leave at least one token everywhere you want to keep). An emptied system is abandoned.</p></div></div>
-        <div class="step"><div class="k">2 · Conquer</div><div class="v"><h3>Take new systems</h3><p>Spend tokens from your hand to seize systems adjacent to your empire — one at a time. A brand-new civilization must make its first conquest at a Rim Gate. The cost of a system is:</p><div class="formula">cost = 2 + defenders + Starbases + Hazard</div></div></div>
+        <div class="step"><div class="k">1 · Recall</div><div class="v"><h3>Gather your strength</h3><p>Your army gathers automatically: every system you hold keeps one token as a garrison, and the rest come into your hand to attack with.</p></div></div>
+        <div class="step"><div class="k">2 · Conquer</div><div class="v"><h3>Take new systems</h3><p>Spend tokens from your hand to seize systems adjacent to your empire — one at a time. A brand-new civilization must make its first conquest at a Rim Gate. The cost of a system is:</p><div class="formula">cost = 2 + defenders + Starbases + Hazard</div>
+<p class="note">That flat <strong>2</strong> is the biggest part of most conquests — an empty, undefended world still costs 2.</p></div></div>
         <div class="step"><div class="k">3 · Redeploy</div><div class="v"><h3>Spread out or dig in</h3><p>Redistribute your surviving population across the systems you hold, at least one token each. Thin borders are cheap to attack; deep stacks are hard to crack.</p></div></div>
-        <div class="step"><div class="k">4 · Score</div><div class="v"><h3>Count your Influence</h3><p>+1 for every system you hold, +1 more for each favored-habitat system, plus whatever your species, trait, and Remnants add. Influence is victory — and also the currency you spend to draft better civilizations.</p></div></div>
+        <div class="step"><div class="k">4 · Consolidate</div><div class="v"><h3>Place what your civilization builds</h3><p>Some civilizations act here: Fortress-Building raises a Starbase, Heroic moves its Bulwarks, Verdant Mycelium spreads. Skip it if yours does none.</p></div></div>
+        <div class="step"><div class="k">5 · Score</div><div class="v"><h3>Count your Influence</h3><p>+1 for every system you hold, +1 more for each favored-habitat system, <strong>+1 for each Relic world</strong>, plus whatever your species, trait, and Remnants add. Influence is victory — and also the currency you spend to draft better civilizations.</p></div></div>
       </div>
     </div>
     <div style="margin-top:22px">
@@ -384,7 +386,7 @@
     [sw('<circle cx="30" cy="30" r="16" fill="#232045" stroke="#E4564A" stroke-width="3" style="filter:drop-shadow(0 0 5px #E4564A)"/>'), "Active empire", "A solid, glowing colored ring: a system held by a living civilization."],
     [sw(node('<circle cx="30" cy="30" r="16" fill="none" stroke="#A66FE6" stroke-width="3" stroke-dasharray="3 3"/>')), "Remnant Empire", "A dashed colored ring: the remains of a collapsed civilization, still scoring and defending."],
     [sw(node()+'<circle cx="16" cy="16" r="8" fill="#F0673A" stroke="#120F20" stroke-width="1.5"/><text x="16" y="20" text-anchor="middle" fill="#EFEAF8" style="font:700 10px monospace">!</text>'), "Hazard", "A red exclamation: +1 to the system's conquest cost. Some abilities ignore it."],
-    [sw(node()+'<text x="16" y="46" text-anchor="middle" fill="#C061DA" style="font:16px monospace;filter:drop-shadow(0 0 4px #C061DA)">✦</text>'), "Relic", "A glowing star. Every civilization scores +1 Influence for each Relic world it holds \u2014 the Ancient trait doubles it. Four of the five sit in the core, which is what makes the centre worth fighting for."],
+    [sw(node()+'<text x="16" y="46" text-anchor="middle" fill="#C061DA" style="font:16px monospace;filter:drop-shadow(0 0 4px #C061DA)">✦</text>'), "Relic", "A glowing star. Every civilization scores +1 Influence for each Relic world it holds — the Ancient trait doubles it. Four of the five sit in the core, which is what makes the centre worth fighting for."],
     [sw(node()+'<circle cx="44" cy="44" r="5" fill="none" stroke="#F06AA6" stroke-width="2" style="filter:drop-shadow(0 0 4px #F06AA6)"/>'), "Wormhole", "A glowing endpoint, linked to its pair by a magenta arc. The two systems count as adjacent for everything."],
     [sw(node()+'<text x="44" y="52" text-anchor="middle" fill="#B6B0CE" style="font:700 10px monospace">▲2</text>'), "Starbase", "Built by Fortress-Building. Each adds +1 defense and +1 Influence while the civilization lives."],
     [sw(node('<circle cx="30" cy="30" r="24" fill="none" stroke="#EFEAF8" stroke-width="2" opacity=".9"/>')), "Bulwark", "The Heroic trait's shield. A system with a Bulwark simply cannot be conquered."]

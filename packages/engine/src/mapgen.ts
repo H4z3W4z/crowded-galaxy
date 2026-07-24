@@ -182,7 +182,10 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
   let hazCore: SystemId[];
   [rng, hazCore] = shuffle(rng, coreRing);
   systems[hazCore[0]!]!.hazard = true;
-  const hazCandidates = armAll.flatMap((c) => c.slice(2));
+  // Draw the scattered hazards from the outer frontier only. Mixing in the
+  // single middle system of each arm — an unavoidable chokepoint on the one
+  // path inward — swung scoring by 16.7 points depending purely on the shuffle.
+  const hazCandidates = armAll.flatMap((c) => c.slice(3));
   let hazPick: SystemId[];
   [rng, hazPick] = shuffle(rng, hazCandidates);
   for (const id of hazPick.slice(0, armCount - 1)) systems[id]!.hazard = true;
@@ -191,9 +194,14 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
   const wormholes: [SystemId, SystemId][] = [];
   const laneKey = new Set(lanes.map(([a, b]) => [a, b].sort().join("|")));
   const gap = Math.max(2, Math.floor(armCount / 2));
-  for (let i = 0; i < Math.min(3, armCount); i++) {
-    const from = armTips[i]!;
-    const to = armTips[(i + gap) % armCount]!;
+  // One wormhole runs from the frontier into the contested centre — a back door
+  // to the relic core is worth fighting over; a link between two frontier
+  // cul-de-sacs is not. The rest bridge distant arm tips.
+  let coreEnd: SystemId[];
+  [rng, coreEnd] = shuffle(rng, coreRing);
+  const pairs: [SystemId, SystemId][] = [[armTips[0]!, coreEnd[0]!]];
+  for (let i = 1; i < Math.min(3, armCount); i++) pairs.push([armTips[i]!, armTips[(i + gap) % armCount]!]);
+  for (const [from, to] of pairs) {
     const key = [from, to].sort().join("|");
     if (from !== to && !laneKey.has(key) && !wormholes.some((w) => [w[0], w[1]].sort().join("|") === key)) {
       wormholes.push([from, to]);

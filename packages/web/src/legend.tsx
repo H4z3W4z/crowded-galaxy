@@ -49,7 +49,7 @@ export const MAP_LEGEND: LegendEntry[] = [
       </Swatch>
     ),
     title: "Conquest cost (teal bubble)",
-    body: "How many population tokens it costs to take this system right now, including its defenders, Hazard, and any Starbases — after your civilization's discounts.",
+    body: "What it costs to take this system right now: a flat 2, plus 1 per defending token, plus 1 for a Hazard and 1 per Starbase — then your civilization's discounts. Even an empty, undefended world costs 2.",
   },
   {
     swatch: (
@@ -94,7 +94,7 @@ export const MAP_LEGEND: LegendEntry[] = [
       </Swatch>
     ),
     title: "Hazard (red ! badge)",
-    body: "A dangerous system: +1 to its conquest cost. Some abilities (Magmaforged, Stealth) ignore it.",
+    body: "A dangerous system: +1 to its conquest cost. The Magmaforged species and the Stealth trait both ignore it — Stealth ignores Starbases too.",
   },
   {
     swatch: (
@@ -106,7 +106,7 @@ export const MAP_LEGEND: LegendEntry[] = [
       </Swatch>
     ),
     title: "Relic (glowing star)",
-    body: "An ancient site. Every civilization scores +1 Influence for each Relic world it holds — the Ancient trait doubles it. Four of the five Relics sit in the contested core, which is what makes the centre worth fighting for.",
+    body: "An ancient site. Any ACTIVE civilization scores +1 Influence for each Relic world it holds — the Ancient trait doubles it. (Remnants score their normal 1 per system, but get no Relic bonus.) Most Relics sit in the contested core, which is what makes the centre worth fighting for.",
   },
   {
     swatch: (
@@ -128,7 +128,7 @@ export const MAP_LEGEND: LegendEntry[] = [
       </Swatch>
     ),
     title: "Starbase (▲ marker)",
-    body: "Built by the Fortress-Building trait. Each adds +1 defense to the system and +1 Influence while the civilization is active.",
+    body: "Built by the Fortress-Building trait — one per turn, up to six. Each adds +1 defense and +1 Influence while the civilization lives. All of them are lost when it collapses.",
   },
   {
     swatch: (
@@ -138,7 +138,7 @@ export const MAP_LEGEND: LegendEntry[] = [
       </Swatch>
     ),
     title: "Bulwark (bright outer ring)",
-    body: "Placed by the Heroic trait. That system simply cannot be conquered while the marker sits on it.",
+    body: "Placed by the Heroic trait. That system cannot be conquered at all — but there are only two markers and they are repositioned every turn, so the immunity moves with you.",
   },
 ];
 

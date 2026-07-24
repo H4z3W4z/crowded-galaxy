@@ -47,7 +47,13 @@ export function aiNextAction(g: GameState): Action {
     return { type: "endConquests" };
   }
 
-  // redeploy / post: let the reducer defaults handle distribution and Verdant growth.
+  // Redeploy explicitly. Falling through to endTurn here ran redeploy, post and
+  // scoring inside a single action, so the post branch below was unreachable and
+  // Fortress-Building, Heroic, Diplomatic and Twilight never fired at all.
+  if (g.phase === "redeploy") {
+    return { type: "redeploy", dist: redeployPlan(g, player) };
+  }
+
   if (g.phase === "post") {
     if (p.active?.trait === "fortress_building" && !g.turn.starbasePlaced) {
       const own = systemsOf(g, player, "active");
@@ -66,11 +72,10 @@ export function aiNextAction(g: GameState): Action {
       const threat = biggestThreat(g, player);
       if (threat !== null && p.diplomaticTarget !== threat) return { type: "nameDiplomaticTarget", player: threat };
     }
-    // Twilight: take the free-tempo collapse once the civ is winding down.
-    if (p.active?.trait === "twilight" && p.active.turnsActive >= 2 && g.round < g.config.rounds) {
-      const own = systemsOf(g, player, "active");
-      const spare = own.reduce((s, id) => s + Math.max(0, g.systems[id]!.tokens - 1), 0) + p.active.hand;
-      if (spare < 4) return { type: "collapse" };
+    // Twilight: the free-tempo collapse, but only when the civ is genuinely
+    // spent — the old `spare < 4` trigger scrapped healthy empires.
+    if (p.active?.trait === "twilight" && shouldCollapse(g, player) && g.round < g.config.rounds) {
+      return { type: "collapse" };
     }
   }
   return { type: "endTurn" };
@@ -127,6 +132,32 @@ function shouldCollapse(g: GameState, player: PlayerId): boolean {
   if (civ.turnsActive >= 4 && spare < cheapest * 2 && g.round <= g.config.rounds - 2) return true;
   // Hard stop on immortal empires (Verdant-style): cycle before the treadmill stalls.
   return civ.turnsActive >= 6 && g.round <= g.config.rounds - 2;
+}
+
+/** Spread the army over held systems, one minimum each, settling the Jovian
+ *  loan first. Mirrors the reducer's auto-redeploy so behaviour is unchanged —
+ *  it just goes through the explicit action so the post phase is reachable. */
+function redeployPlan(g: GameState, player: PlayerId): Record<SystemId, number> {
+  const p = g.players[player]!;
+  const own = systemsOf(g, player, "active");
+  if (own.length === 0) return {};
+  const onBoard = own.reduce((s, id) => s + g.systems[id]!.tokens, 0);
+  let available = onBoard + (p.active?.hand ?? 0) - g.turn.jovianBonus;
+  if (available < 0) available = 0;
+  // Cannot garrison everything: give up the thinnest systems.
+  const order = own.slice().sort((a, b) => g.systems[b]!.tokens - g.systems[a]!.tokens || a.localeCompare(b));
+  const keep = order.slice(0, Math.max(0, Math.min(order.length, available)));
+  const dist: Record<SystemId, number> = {};
+  for (const id of keep) dist[id] = 1;
+  let spare = available - keep.length;
+  const bySize = keep.slice().sort((a, b) => g.systems[b]!.tokens - g.systems[a]!.tokens);
+  let i = 0;
+  while (spare > 0 && bySize.length > 0) {
+    dist[bySize[i % bySize.length]!] = (dist[bySize[i % bySize.length]!] ?? 1) + 1;
+    spare -= 1;
+    i += 1;
+  }
+  return dist;
 }
 
 function recallPlan(g: GameState, player: PlayerId): Record<SystemId, number> {

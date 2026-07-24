@@ -176,6 +176,9 @@ function CivPanel({ game }: { game: NonNullable<ReturnType<typeof useStore.getSt
           <Panel surface="inset" pad="10px">
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 13 }}>
               Hand: <b style={{ fontSize: 17 }}>{p.active.hand}</b> tokens
+              {game.turn.jovianBonus > 0 && (
+                <span style={{ color: "var(--influence-deep)" }}> ({game.turn.jovianBonus} on loan — returned before redeploy)</span>
+              )}
             </div>
             <div style={{ color: "var(--ink-3)", fontSize: 12 }}>Turn {p.active.turnsActive + 1} of this civilization</div>
           </Panel>
@@ -291,9 +294,14 @@ function PhaseControls({
             <SystemSummary game={game} id={sel} />
             <Row style={{ marginTop: 8 }}>
               {short <= 0 && (
-                <Button variant="gold" size="sm" icon="swords" onClick={() => dispatch({ type: "conquer", target: sel })}>
-                  Conquer for {cost}
-                </Button>
+                <span style={{ display: "inline-flex", flexDirection: "column", gap: 3 }}>
+                  <Button variant="gold" size="sm" icon="swords" onClick={() => dispatch({ type: "conquer", target: sel })}>
+                    Conquer for {cost}
+                  </Button>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-3)" }}>
+                    {costBreakdown(game, sel, cost!)}
+                  </span>
+                </span>
               )}
               {short >= 1 && short <= 3 && civ && civ.hand >= 1 && !game.turn.finalConquestUsed && (
                 <Button
@@ -437,6 +445,11 @@ function RedeployControls({ game }: { game: NonNullable<ReturnType<typeof useSto
         Redeploy — pool <b>{pool}</b>
         {game.turn.jovianBonus > 0 && <span style={{ color: "var(--ink-3)", fontSize: 12 }}> (returning {game.turn.jovianBonus} Reaver tokens)</span>}
       </ActionTitle>
+      <div style={{ fontSize: 13, color: pool < 0 ? "var(--danger)" : "var(--ink-3)", marginBottom: 8 }}>
+        {pool < 0
+          ? `You have ${-pool} more tokens on the map than you can keep — the Reavers' loan is going back. Press − until the pool reaches 0. A system reduced to nothing is abandoned.`
+          : "Spread your army across your systems — at least 1 token in each. Anything left in the pool stays in hand."}
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 220, overflowY: "auto" }}>
         {own.map((id) => (
           <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--font-mono)", fontSize: 13 }}>
@@ -453,7 +466,14 @@ function RedeployControls({ game }: { game: NonNullable<ReturnType<typeof useSto
         ))}
       </div>
       <Row style={{ marginTop: 10 }}>
-        <Button variant="gold" size="sm" icon="check" disabled={pool < 0} onClick={() => dispatch({ type: "redeploy", dist })}>
+        <Button
+          variant="gold"
+          size="sm"
+          icon="check"
+          disabled={pool < 0}
+          title={pool < 0 ? `Over by ${-pool}: press − until the pool reaches 0.` : "Lock in this deployment."}
+          onClick={() => dispatch({ type: "redeploy", dist })}
+        >
           Confirm deployment
         </Button>
         <Button variant="secondary" size="sm" onClick={() => dispatch({ type: "endTurn" })}>
@@ -485,15 +505,17 @@ function MarketOverlay({
     <div style={{ position: "fixed", inset: 0, background: "rgba(7,6,18,.72)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 40 }}>
       <Panel surface="paper" style={{ width: 700, maxWidth: "96vw", maxHeight: "92vh", overflowY: "auto" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 2 }}>
-          <h2 style={{ fontSize: "var(--display-sm)", flex: 1 }}>Choose your next civilization</h2>
+          <h2 style={{ fontSize: "var(--display-sm)", flex: 1 }}>{game.round === 1 ? "Choose your first civilization" : "Choose your next civilization"}</h2>
           {online && (
             <Button variant="ghost" size="sm" icon="door-open" onClick={onLeave}>
               Leave
             </Button>
           )}
         </div>
-        <div style={{ color: "var(--ink-2)", marginBottom: 14 }}>
-          {game.config.seats[game.current]!.name} — {p.influence} Influence. Skipping a combo costs 1 Influence per slot passed.
+        <div style={{ color: "var(--ink-2)", marginBottom: 14, fontSize: 14, lineHeight: 1.5 }}>
+          <b>{game.config.seats[game.current]!.name} — {p.influence} Influence.</b> Influence is both your score and your
+          currency. The top combination is free; each one you skip past costs 1 Influence — and that Influence stays on the
+          combo you skipped, waiting for whoever takes it later.
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {game.market.map((slot, i) => {
@@ -546,7 +568,7 @@ function MarketOverlay({
             );
           })}
         </div>
-        <div style={{ marginTop: 14, display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ position: "sticky", bottom: 0, marginTop: 14, paddingTop: 12, display: "flex", gap: 10, alignItems: "center", background: "var(--card)", borderTop: "1.5px solid var(--line-mid)" }}>
           <Button variant="gold" size="md" icon="rocket" disabled={pick === null} onClick={() => pick !== null && dispatch({ type: "chooseCivilization", slot: pick })}>
             {pick === null ? "Select a combination" : pick === 0 ? "Launch (free)" : `Launch (pay ${pick} Influence)`}
           </Button>
@@ -621,6 +643,21 @@ function Ability({ icon, title, text }: { icon: string; title: string; text: str
       </div>
     </div>
   );
+}
+
+/** Spell out where a conquest cost comes from — the flat 2 is the biggest part
+ *  of most conquests and appeared nowhere in the app. */
+function costBreakdown(game: NonNullable<ReturnType<typeof useStore.getState>["game"]>, id: string, cost: number): string {
+  const sys = game.systems[id]!;
+  const def = game.map.systems[id]!;
+  const parts = ["2 base"];
+  const defenders = sys.occupant ? sys.tokens : sys.neutrals;
+  if (defenders > 0) parts.push(`+${defenders} defender${defenders === 1 ? "" : "s"}`);
+  if (def.hazard) parts.push("+1 hazard");
+  if (sys.starbases > 0) parts.push(`+${sys.starbases} starbase${sys.starbases === 1 ? "" : "s"}`);
+  const raw = 2 + defenders + (def.hazard ? 1 : 0) + sys.starbases;
+  if (cost !== raw) parts.push(`${cost < raw ? "−" : "+"}${Math.abs(raw - cost)} your abilities`);
+  return parts.join(" ");
 }
 
 function ActionTitle({ children }: { children: React.ReactNode }) {

@@ -72,7 +72,7 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
           `Planet: ${def.planet.replace("_", " ")}`,
           ...(def.rimGate ? ["Rim Gate — new civilizations may enter here"] : []),
           ...(def.hazard ? ["Hazard — +1 to conquer"] : []),
-          ...(def.relic ? ["Relic — some Traits score it"] : []),
+          ...(def.relic ? ["Relic — +1 Influence for whoever holds it (Ancient doubles it)"] : []),
           ...(wormSet.has(code) ? ["Wormhole endpoint — counts as adjacent to its pair"] : []),
           occ
             ? `${game.config.seats[occ.player]!.name}: ${sys.tokens} population${isRemnant ? " (Remnant)" : ""}`

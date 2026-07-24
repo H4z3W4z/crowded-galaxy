@@ -21,7 +21,12 @@ export async function tableDetail(tableId: string) {
     `SELECT seat_idx, user_id, ai, name FROM table_seats WHERE table_id = $1 ORDER BY seat_idx`,
     [tableId],
   );
-  return { ...t.rows[0], seats: seats.rows };
+  const invites = await pool.query(
+    `SELECT i.id, i.status, u.name FROM invites i JOIN users u ON u.id = i.to_user
+     WHERE i.table_id = $1 AND i.status = 'pending' ORDER BY i.created_at`,
+    [tableId],
+  );
+  return { ...t.rows[0], seats: seats.rows, invites: invites.rows };
 }
 
 export function registerTableRoutes(app: FastifyInstance): void {
@@ -134,6 +139,88 @@ export function registerTableRoutes(app: FastifyInstance): void {
       await pool.query(`UPDATE table_seats SET name = $3 WHERE table_id = $1 AND seat_idx = $2`, [id, body.seatIdx, body.name]);
     }
     return reply.send({ table: await tableDetail(id) });
+  });
+
+  // Host invites a registered player; accepting seats them (an explicit invite
+  // may take an AI seat — unlike the anonymous code join).
+  app.post("/api/tables/:id/invite", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const { id } = z.object({ id: z.string() }).parse(req.params);
+    const { userId } = z.object({ userId: z.string().min(1) }).parse(req.body);
+    const t = await pool.query(`SELECT host_id, status FROM game_tables WHERE id = $1`, [id]);
+    if (t.rowCount === 0) return reply.code(404).send({ error: "no such table" });
+    const row = t.rows[0] as { host_id: string; status: string };
+    if (row.host_id !== user.id) return reply.code(403).send({ error: "host only" });
+    if (row.status !== "lobby") return reply.code(400).send({ error: "game already started" });
+    if (userId === user.id) return reply.code(400).send({ error: "you are already seated" });
+    const target = await pool.query(`SELECT 1 FROM users WHERE id = $1 AND username IS NOT NULL`, [userId]);
+    if (target.rowCount === 0) return reply.code(404).send({ error: "no such player" });
+    const seated = await pool.query(`SELECT 1 FROM table_seats WHERE table_id = $1 AND user_id = $2`, [id, userId]);
+    if ((seated.rowCount ?? 0) > 0) return reply.code(400).send({ error: "already seated" });
+    await pool.query(
+      `INSERT INTO invites (id, table_id, from_user, to_user) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (table_id, to_user) DO UPDATE SET status = 'pending', created_at = now()`,
+      [randomBytes(9).toString("hex"), id, user.id, userId],
+    );
+    return reply.send({ table: await tableDetail(id) });
+  });
+
+  app.get("/api/invites", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const r = await pool.query(
+      `SELECT i.id, i.table_id, t.rounds, u.name AS host_name,
+              (SELECT count(*) FROM table_seats s WHERE s.table_id = t.id AND s.user_id IS NOT NULL) AS humans
+       FROM invites i
+       JOIN game_tables t ON t.id = i.table_id
+       JOIN users u ON u.id = i.from_user
+       WHERE i.to_user = $1 AND i.status = 'pending' AND t.status = 'lobby'
+       ORDER BY i.created_at DESC`,
+      [user.id],
+    );
+    return reply.send({ invites: r.rows });
+  });
+
+  app.post("/api/invites/:id/accept", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const { id } = z.object({ id: z.string() }).parse(req.params);
+    const inv = await pool.query(
+      `UPDATE invites SET status = 'accepted' WHERE id = $1 AND to_user = $2 AND status = 'pending' RETURNING table_id`,
+      [id, user.id],
+    );
+    if (inv.rowCount === 0) return reply.code(404).send({ error: "no such invitation" });
+    const tableId = (inv.rows[0] as { table_id: string }).table_id;
+    const t = await pool.query(`SELECT status FROM game_tables WHERE id = $1`, [tableId]);
+    if ((t.rows[0] as { status: string } | undefined)?.status !== "lobby") {
+      return reply.code(400).send({ error: "game already started" });
+    }
+    // Atomic claim: prefer an open human seat, else convert an AI seat.
+    const claim = await pool.query(
+      `UPDATE table_seats SET user_id = $2, ai = false, name = $3
+       WHERE table_id = $1 AND seat_idx = (
+         SELECT seat_idx FROM table_seats
+         WHERE table_id = $1 AND user_id IS NULL
+         ORDER BY ai ASC, seat_idx LIMIT 1
+         FOR UPDATE SKIP LOCKED
+       )
+       RETURNING seat_idx`,
+      [tableId, user.id, user.name],
+    );
+    if (claim.rowCount === 0) return reply.code(400).send({ error: "table is full" });
+    return reply.send({ table: await tableDetail(tableId) });
+  });
+
+  app.post("/api/invites/:id/decline", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const { id } = z.object({ id: z.string() }).parse(req.params);
+    await pool.query(`UPDATE invites SET status = 'declined' WHERE id = $1 AND to_user = $2 AND status = 'pending'`, [
+      id,
+      user.id,
+    ]);
+    return reply.send({ ok: true });
   });
 
   app.post("/api/tables/:id/start", async (req, reply) => {

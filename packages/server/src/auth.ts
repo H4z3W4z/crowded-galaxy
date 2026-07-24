@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { pool } from "./db.js";
@@ -9,19 +9,43 @@ const isProd = process.env.NODE_ENV === "production";
 
 export interface AuthedUser {
   id: string;
-  email: string;
+  username: string;
   name: string;
 }
 
-function hashToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
+// -- Password hashing: scrypt (Node built-in), salt:hash hex. --
+function hashPassword(password: string): string {
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password: string, stored: string): boolean {
+  const [salt, hash] = stored.split(":");
+  if (!salt || !hash) return false;
+  const candidate = scryptSync(password, salt, 64);
+  const expected = Buffer.from(hash, "hex");
+  return candidate.length === expected.length && timingSafeEqual(candidate, expected);
+}
+
+// -- Light per-IP login throttle (in-memory; single-process server). --
+const attempts = new Map<string, { count: number; resetAt: number }>();
+function throttled(ip: string): boolean {
+  const now = Date.now();
+  const a = attempts.get(ip);
+  if (!a || now > a.resetAt) {
+    attempts.set(ip, { count: 1, resetAt: now + 60_000 });
+    return false;
+  }
+  a.count += 1;
+  return a.count > 10;
 }
 
 export async function currentUser(req: FastifyRequest): Promise<AuthedUser | null> {
   const sid = req.cookies[SESSION_COOKIE];
   if (!sid) return null;
   const r = await pool.query(
-    `SELECT u.id, u.email, u.name FROM sessions s JOIN users u ON u.id = s.user_id
+    `SELECT u.id, u.username, u.name FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.id = $1 AND s.expires_at > now()`,
     [sid],
   );
@@ -47,40 +71,44 @@ async function createSession(reply: FastifyReply, userId: string): Promise<void>
   });
 }
 
+const credentials = z.object({
+  username: z
+    .string()
+    .min(3)
+    .max(20)
+    .regex(/^[a-zA-Z0-9_]+$/, "letters, numbers, underscore"),
+  password: z.string().min(6).max(200),
+});
+
 export function registerAuthRoutes(app: FastifyInstance): void {
-  // Magic-link provider: production wants a real email service; dev logs the link
-  // to the server console AND returns it in the response so LAN playtests are 1-step.
-  app.post("/api/auth/magic-link", async (req, reply) => {
-    const body = z.object({ email: z.string().email(), name: z.string().min(1).max(40) }).parse(req.body);
-    const token = randomBytes(24).toString("hex");
-    const expires = new Date(Date.now() + 15 * 60_000);
-    await pool.query(
-      `INSERT INTO magic_tokens (token_hash, email, name, expires_at) VALUES ($1, $2, $3, $4)`,
-      [hashToken(token), body.email.toLowerCase(), body.name, expires],
-    );
-    const link = `/api/auth/callback?token=${token}`;
-    app.log.info(`magic link for ${body.email}: ${link}`);
-    return reply.send(isProd ? { sent: true } : { sent: true, devLink: link });
+  app.post("/api/auth/register", async (req, reply) => {
+    const body = credentials.extend({ name: z.string().min(1).max(40) }).parse(req.body);
+    const existing = await pool.query(`SELECT 1 FROM users WHERE lower(username) = lower($1)`, [body.username]);
+    if ((existing.rowCount ?? 0) > 0) return reply.code(409).send({ error: "that username is taken" });
+    const id = randomBytes(12).toString("hex");
+    await pool.query(`INSERT INTO users (id, username, name, password_hash) VALUES ($1, $2, $3, $4)`, [
+      id,
+      body.username,
+      body.name,
+      hashPassword(body.password),
+    ]);
+    await createSession(reply, id);
+    return reply.send({ user: { id, username: body.username, name: body.name } });
   });
 
-  app.get("/api/auth/callback", async (req, reply) => {
-    const { token } = z.object({ token: z.string().min(10) }).parse(req.query);
+  app.post("/api/auth/login", async (req, reply) => {
+    if (throttled(req.ip)) return reply.code(429).send({ error: "too many attempts — wait a minute" });
+    const body = credentials.parse(req.body);
     const r = await pool.query(
-      `UPDATE magic_tokens SET used = true
-       WHERE token_hash = $1 AND used = false AND expires_at > now()
-       RETURNING email, name`,
-      [hashToken(token)],
+      `SELECT id, username, name, password_hash FROM users WHERE lower(username) = lower($1)`,
+      [body.username],
     );
-    if (r.rowCount === 0) return reply.code(400).send({ error: "invalid or expired link" });
-    const { email, name } = r.rows[0] as { email: string; name: string };
-    const u = await pool.query(
-      `INSERT INTO users (id, email, name) VALUES ($1, $2, $3)
-       ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
-       RETURNING id`,
-      [randomBytes(12).toString("hex"), email, name],
-    );
-    await createSession(reply, (u.rows[0] as { id: string }).id);
-    return reply.redirect("/");
+    const row = r.rows[0] as { id: string; username: string; name: string; password_hash: string | null } | undefined;
+    if (!row?.password_hash || !verifyPassword(body.password, row.password_hash)) {
+      return reply.code(401).send({ error: "wrong username or password" });
+    }
+    await createSession(reply, row.id);
+    return reply.send({ user: { id: row.id, username: row.username, name: row.name } });
   });
 
   app.get("/api/me", async (req, reply) => {
@@ -93,5 +121,16 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     if (sid) await pool.query(`DELETE FROM sessions WHERE id = $1`, [sid]);
     reply.clearCookie(SESSION_COOKIE, { path: "/" });
     return reply.send({ ok: true });
+  });
+
+  // Player directory for invites. Reasonable on a private friends server;
+  // revisit (search-only, opt-in visibility) before any public deployment.
+  app.get("/api/users", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const r = await pool.query(
+      `SELECT id, username, name FROM users WHERE username IS NOT NULL ORDER BY lower(name) LIMIT 200`,
+    );
+    return reply.send({ users: r.rows });
   });
 }

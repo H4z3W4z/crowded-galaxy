@@ -2,8 +2,22 @@ import type { Action, GameState } from "@cg/engine";
 
 export interface Me {
   id: string;
-  email: string;
+  username: string;
   name: string;
+}
+
+export interface DirectoryUser {
+  id: string;
+  username: string;
+  name: string;
+}
+
+export interface InviteRow {
+  id: string;
+  table_id: string;
+  rounds: number;
+  host_name: string;
+  humans: number;
 }
 
 export interface SeatRow {
@@ -21,6 +35,7 @@ export interface TableInfo {
   rounds: number;
   game_id: string | null;
   seats: SeatRow[];
+  invites?: { id: string; status: string; name: string }[];
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
@@ -42,9 +57,17 @@ export class ApiError extends Error {
 
 export const api = {
   me: () => req<{ user: Me | null }>("/api/me"),
-  requestMagicLink: (email: string, name: string) =>
-    req<{ sent: boolean; devLink?: string }>("/api/auth/magic-link", { method: "POST", body: JSON.stringify({ email, name }) }),
+  register: (username: string, name: string, password: string) =>
+    req<{ user: Me }>("/api/auth/register", { method: "POST", body: JSON.stringify({ username, name, password }) }),
+  login: (username: string, password: string) =>
+    req<{ user: Me }>("/api/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
   logout: () => req<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
+  directory: () => req<{ users: DirectoryUser[] }>("/api/users"),
+  myInvites: () => req<{ invites: InviteRow[] }>("/api/invites"),
+  invitePlayer: (tableId: string, userId: string) =>
+    req<{ table: TableInfo }>(`/api/tables/${tableId}/invite`, { method: "POST", body: JSON.stringify({ userId }) }),
+  acceptInvite: (id: string) => req<{ table: TableInfo }>(`/api/invites/${id}/accept`, { method: "POST" }),
+  declineInvite: (id: string) => req<{ ok: boolean }>(`/api/invites/${id}/decline`, { method: "POST" }),
   createTable: (seatCount: number, rounds: number) =>
     req<{ table: TableInfo }>("/api/tables", { method: "POST", body: JSON.stringify({ seatCount, rounds }) }),
   myTables: () => req<{ tables: Omit<TableInfo, "seats">[] }>("/api/tables/mine"),

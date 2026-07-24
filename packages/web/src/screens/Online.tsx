@@ -1,6 +1,6 @@
 // Online flow screens: Home, Login, Tables list, Lobby.
 import { useEffect, useState } from "react";
-import { api, type TableInfo } from "../api";
+import { api, type DirectoryUser, type InviteRow, type TableInfo } from "../api";
 import { useStore } from "../store";
 import { Button } from "@ds/components/core/Button.jsx";
 import { Panel } from "@ds/components/core/Panel.jsx";
@@ -44,52 +44,75 @@ export function Home() {
 export function Login() {
   const setScreen = useStore((s) => s.setScreen);
   const setMe = useStore((s) => s.setMe);
-  const [email, setEmail] = useState("");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [username, setUsername] = useState("");
   const [name, setName] = useState("");
-  const [devLink, setDevLink] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  async function request() {
+  const ready = username.trim().length >= 3 && password.length >= 6 && (mode === "signin" || name.trim().length > 0);
+
+  async function submit() {
     setErr(null);
+    setBusy(true);
     try {
-      const r = await api.requestMagicLink(email.trim(), name.trim() || email.split("@")[0]!);
-      setSent(true);
-      setDevLink(r.devLink ?? null);
+      const r =
+        mode === "signin"
+          ? await api.login(username.trim(), password)
+          : await api.register(username.trim(), name.trim(), password);
+      setMe(r.user);
+      setScreen("tables");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "failed");
+    } finally {
+      setBusy(false);
     }
   }
 
-  async function followDevLink() {
-    // Dev convenience: the server hands back the link so LAN playtests skip email.
-    await fetch(devLink!, { credentials: "same-origin" });
-    const { user } = await api.me();
-    setMe(user);
-    setScreen("tables");
-  }
-
   return (
-    <Shell title="Sign in" back={() => setScreen("home")}>
-      {!sent ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <Input label="Display name" value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} placeholder="Grace" />
-          <Input label="Email" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} placeholder="you@example.com" />
-          <Button variant="gold" icon="arrow-right" disabled={!email.includes("@")} onClick={request}>
-            Send magic link
-          </Button>
-          {err && <div style={{ color: "var(--danger)", fontSize: 13 }}>{err}</div>}
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ color: "var(--ink-2)" }}>Check your email for the sign-in link.</div>
-          {devLink && (
-            <Button variant="secondary" icon="door-open" onClick={followDevLink}>
-              Dev shortcut: sign in now
-            </Button>
-          )}
-        </div>
-      )}
+    <Shell title={mode === "signin" ? "Sign in" : "Create account"} back={() => setScreen("home")}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        <Button variant={mode === "signin" ? "primary" : "secondary"} size="sm" onClick={() => setMode("signin")}>
+          Sign in
+        </Button>
+        <Button variant={mode === "signup" ? "primary" : "secondary"} size="sm" onClick={() => setMode("signup")}>
+          Create account
+        </Button>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <Input
+          label="Username"
+          value={username}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+          placeholder="grace"
+          hint={mode === "signup" ? "3-20 characters: letters, numbers, underscore" : undefined}
+          autoCapitalize="none"
+          autoCorrect="off"
+        />
+        {mode === "signup" && (
+          <Input
+            label="Display name"
+            value={name}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+            placeholder="Grace"
+            hint="How other players see you"
+          />
+        )}
+        <Input
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          hint={mode === "signup" ? "At least 6 characters" : undefined}
+          onKeyDown={(e: React.KeyboardEvent) => e.key === "Enter" && ready && submit()}
+        />
+        <Button variant="gold" icon="arrow-right" disabled={!ready || busy} onClick={submit}>
+          {mode === "signin" ? "Sign in" : "Create account & sign in"}
+        </Button>
+        {err && <div style={{ color: "var(--danger)", fontSize: 13 }}>{err}</div>}
+      </div>
     </Shell>
   );
 }
@@ -99,18 +122,33 @@ export function Tables() {
   const openLobby = useStore((s) => s.openLobby);
   const openOnlineGame = useStore((s) => s.openOnlineGame);
   const [tables, setTables] = useState<Omit<TableInfo, "seats">[]>([]);
+  const [invites, setInvites] = useState<InviteRow[]>([]);
   const [code, setCode] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [seatCount, setSeatCount] = useState(3);
   const [rounds, setRounds] = useState(12);
 
   async function refresh() {
-    const r = await api.myTables();
-    setTables(r.tables);
+    const [t, i] = await Promise.all([api.myTables(), api.myInvites()]);
+    setTables(t.tables);
+    setInvites(i.invites);
   }
   useEffect(() => {
     void refresh();
+    const t = setInterval(refresh, 5000); // invitations arrive while you sit here
+    return () => clearInterval(t);
   }, []);
+
+  async function accept(inv: InviteRow) {
+    setErr(null);
+    try {
+      const { table } = await api.acceptInvite(inv.id);
+      openLobby(table.id);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "failed");
+      void refresh();
+    }
+  }
 
   async function create() {
     const { table } = await api.createTable(seatCount, rounds);
@@ -128,7 +166,32 @@ export function Tables() {
   }
 
   return (
-    <Shell title="Online tables" back={() => setScreen("home")}>
+    <Shell title="Lobby" back={() => setScreen("home")}>
+      {invites.length > 0 && (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 13, letterSpacing: "var(--tracking-caps)", textTransform: "uppercase", color: "var(--gold, var(--influence))", marginBottom: 8 }}>
+            Invitations
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {invites.map((inv) => (
+              <div key={inv.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--paper-1)", border: "1.5px solid var(--influence)", borderRadius: "var(--r-md)" }}>
+                <Icon name="bell" size={16} style={{ color: "var(--influence)" }} />
+                <span style={{ fontSize: 14 }}>
+                  <b>{inv.host_name}</b> invited you — {inv.rounds} rounds, {inv.humans} seated
+                </span>
+                <span style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+                  <Button variant="gold" size="sm" icon="check" onClick={() => void accept(inv)}>
+                    Accept
+                  </Button>
+                  <Button variant="ghost" size="sm" icon="x" onClick={() => api.declineInvite(inv.id).then(refresh)}>
+                    Decline
+                  </Button>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 12, letterSpacing: "var(--tracking-caps)", textTransform: "uppercase", color: "var(--ink-3)" }}>Seats</span>
         {[2, 3, 4, 5].map((n) => (
@@ -186,6 +249,8 @@ export function Lobby() {
   const me = useStore((s) => s.me);
   const [table, setTable] = useState<TableInfo | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [players, setPlayers] = useState<DirectoryUser[]>([]);
+  const [pick, setPick] = useState("");
 
   async function refresh() {
     try {
@@ -201,6 +266,7 @@ export function Lobby() {
   // predates the game, so polling keeps v1 simple.)
   useEffect(() => {
     void refresh();
+    api.directory().then((r) => setPlayers(r.users)).catch(() => {});
     const t = setInterval(refresh, 2000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -237,6 +303,44 @@ export function Lobby() {
           </div>
         ))}
       </div>
+      {isHost && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 12, letterSpacing: "var(--tracking-caps)", textTransform: "uppercase", color: "var(--ink-3)", marginBottom: 6 }}>
+            Invite a player
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <select
+              className="cg-input"
+              value={pick}
+              onChange={(e) => setPick(e.target.value)}
+              style={{ flex: 1, minWidth: 180, height: 44 }}
+            >
+              <option value="">Choose a player…</option>
+              {players
+                .filter((u) => u.id !== me?.id && !table.seats.some((s) => s.user_id === u.id))
+                .map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} (@{u.username})
+                  </option>
+                ))}
+            </select>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon="bell"
+              disabled={!pick}
+              onClick={() => api.invitePlayer(table.id, pick).then(() => { setPick(""); void refresh(); }).catch((e) => setErr(e.message))}
+            >
+              Invite
+            </Button>
+          </div>
+          {(table.invites?.length ?? 0) > 0 && (
+            <div style={{ marginTop: 8, fontSize: 13, color: "var(--ink-2)" }}>
+              Invited: {table.invites!.map((i) => i.name).join(", ")} <span style={{ color: "var(--ink-3)" }}>(waiting)</span>
+            </div>
+          )}
+        </div>
+      )}
       {isHost ? (
         <Button variant="gold" size="lg" icon="rocket" onClick={() => api.startTable(table.id).then(({ gameId }) => void openOnlineGame(gameId)).catch((e) => setErr(e.message))}>
           Start game ({humans} human{humans === 1 ? "" : "s"})

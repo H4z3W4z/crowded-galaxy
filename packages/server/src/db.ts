@@ -61,5 +61,20 @@ export async function initDb(): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       PRIMARY KEY (game_id, seq)
     );
+    CREATE TABLE IF NOT EXISTS invites (
+      id TEXT PRIMARY KEY,
+      table_id TEXT NOT NULL REFERENCES game_tables(id),
+      from_user TEXT NOT NULL REFERENCES users(id),
+      to_user TEXT NOT NULL REFERENCES users(id),
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (table_id, to_user)
+    );
+  `);
+  // v0.5: username/password accounts replace magic links. Email becomes optional.
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+    ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
   `);
 }

@@ -190,8 +190,8 @@ describe("panel deviation: dead Remnant leaves play", () => {
     g = apply(g, { type: "chooseCivilization", slot: 0 });
     g = apply(g, { type: "conquer", target: rim(g) });
     g = apply(g, { type: "endTurn" });
-    g = apply(g, { type: "chooseCivilization", slot: 0 }); // P2 burns its turn on another rim gate
-    g = apply(g, { type: "conquer", target: otherRim(g) });
+    g = apply(g, { type: "chooseCivilization", slot: 0 }); // P2 stages on an adjacent rim gate
+    g = apply(g, { type: "conquer", target: adjRim(g) });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "collapse" }); // P1 remnant on rim(g) only
     expect(g.players[0]!.remnants).toHaveLength(1);

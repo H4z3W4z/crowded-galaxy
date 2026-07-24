@@ -23,9 +23,16 @@ function config(seed: number, seats = 3): GameConfig {
 // Map-agnostic helpers. The galaxy is generated per game from its seed, so
 // tests derive the systems they need from the game in hand rather than from any
 // fixed map.
-const rim = (g: GameState) => g.map.systemIds.find((id) => g.map.systems[id]!.rimGate && !g.map.systems[id]!.hazard)!;
+const isPlainRim = (g: GameState, id: string) => g.map.systems[id]!.rimGate && !g.map.systems[id]!.hazard;
+// A plain rim gate that also has a plain rim-gate neighbour, so an opponent can
+// stage next door. Hazards can land on rim gates, so neither is guaranteed.
+const rim = (g: GameState) =>
+  g.map.systemIds.find((id) => isPlainRim(g, id) && g.map.adjacency[id]!.some((n) => isPlainRim(g, n))) ??
+  g.map.systemIds.find((id) => isPlainRim(g, id))!;
 const oceanRim = (g: GameState) =>
-  g.map.systemIds.find((id) => g.map.systems[id]!.rimGate && g.map.systems[id]!.planet === "ocean");
+  g.map.systemIds.find(
+    (id) => g.map.systems[id]!.rimGate && !g.map.systems[id]!.hazard && g.map.systems[id]!.planet === "ocean",
+  );
 
 function cheapest(g: GameState, player = 0): { target: string; cost: number } {
   return legalTargets(g, player).slice().sort((a, b) => a.cost - b.cost)[0]!;
@@ -252,7 +259,8 @@ describe("collapse and remnants", () => {
     g = apply(g, { type: "conquer", target: rim(g) });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 }); // P2 takes any rim gate to burn its turn
-    const p2rim = g.map.systemIds.find((id) => g.map.systems[id]!.rimGate && id !== rim(g) && !g.map.systems[id]!.hazard)!;
+    // must be adjacent to rim(g) so P2 can push into it after the collapse
+    const p2rim = g.map.adjacency[rim(g)]!.find((id) => isPlainRim(g, id))!;
     g = apply(g, { type: "conquer", target: p2rim });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "collapse" }); // P1 remnant on rim(g)

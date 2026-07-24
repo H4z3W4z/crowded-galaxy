@@ -81,32 +81,33 @@ export function checkConquest(g: GameState, player: PlayerId, target: SystemId):
   const species = civ.species;
   const trait = civ.trait;
   const origins = originSystems(g, player);
-  const hasBoard = origins.length > 0;
+  // Entry rights depend on ACTIVE territory only. A Concord of Many Remnant adds
+  // origins, but must never remove the universal Rim-Gate entry a territoryless
+  // civilization is owed (rules 6.A.2).
+  const activeCount = systemsOf(g, player, "active").length;
 
   let reachable = false;
   let viaWormhole = false;
-  if (hasBoard) {
-    for (const o of origins) {
-      if (neighbors(g, o).includes(target)) {
-        reachable = true;
-        if (isWormholeLink(g, o, target)) viaWormhole = true;
-      }
+  for (const o of origins) {
+    if (neighbors(g, o).includes(target)) {
+      reachable = true;
+      if (isWormholeLink(g, o, target)) viaWormhole = true;
     }
-    // Nomadic: any conquest may enter through any Rim Gate.
-    if (!reachable && trait === "nomadic" && def.rimGate) reachable = true;
-    // Heliox Aerostats: the atmospheric network — the drifting cities reach any
-    // Gas Giant in the galaxy, so scattered Gas Giants are an asset, not a problem.
-    if (!reachable && species === "heliox_aerostats" && def.planet === "gas_giant") reachable = true;
-    // Quantum Drive: shared planet type with any controlled system, adjacency-free.
-    if (!reachable && trait === "quantum_drive") {
-      reachable = origins.some((o) => g.map.systems[o]!.planets.some((p) => def.planets.includes(p)));
-    }
-  } else {
-    // Launch (or re-entry after being wiped out): enter through any Rim Gate.
-    reachable = def.rimGate;
-    if (!reachable) return illegal("first conquest must enter through a Rim Gate");
   }
-  if (!reachable) return illegal("not adjacent to your empire");
+  // No territory of your own: the Rim Gates are always open to you.
+  if (!reachable && activeCount === 0 && def.rimGate) reachable = true;
+  // Nomadic: any conquest may enter through any Rim Gate.
+  if (!reachable && trait === "nomadic" && def.rimGate) reachable = true;
+  // Heliox Aerostats: the atmospheric network reaches any Gas Giant, once the
+  // drifting cities have somewhere to drift from.
+  if (!reachable && activeCount > 0 && species === "heliox_aerostats" && def.planet === "gas_giant") reachable = true;
+  // Quantum Drive: shared planet type with any controlled system, adjacency-free.
+  if (!reachable && trait === "quantum_drive" && origins.length > 0) {
+    reachable = origins.some((o) => g.map.systems[o]!.planets.some((p) => def.planets.includes(p)));
+  }
+  if (!reachable) {
+    return illegal(activeCount === 0 ? "first conquest must enter through a Rim Gate" : "not adjacent to your empire");
+  }
 
   return { legal: true, cost: conquestCost(g, player, target, viaWormhole), viaWormhole };
 }

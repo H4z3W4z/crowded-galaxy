@@ -258,7 +258,7 @@ export function apply(state: GameState, action: Action): GameState {
       if (action.systems.length > 2) throw new RulesError("two Bulwark markers");
       const own = systemsOf(g, player, "active");
       if (action.systems.some((id) => !own.includes(id))) throw new RulesError("Bulwarks go on your systems");
-      for (const id of g.map.systemIds) g.systems[id]!.bulwark = false;
+      for (const id of own) g.systems[id]!.bulwark = false; // only your own markers move
       for (const id of action.systems) g.systems[id]!.bulwark = true;
       g.turn.bulwarksMoved = true;
       if (action.systems.length > 0) {
@@ -578,7 +578,19 @@ function collapseCiv(g: GameState, player: PlayerId, scoreCollapse: boolean): vo
   }
 
   g.traitDiscard.push(civ.trait);
-  p.remnants = [{ species: civ.species }, ...keep];
+  // A civilization that held nothing leaves no Remnant — its species card goes
+  // straight back to the discard rather than lingering as an empty entry.
+  const leftBehind = systemsOf(g, player, "remnant").some((id) => g.systems[id]!.occupant!.remnantIdx === 0);
+  if (leftBehind) {
+    p.remnants = [{ species: civ.species }, ...keep];
+  } else {
+    g.speciesDiscard.push(civ.species);
+    p.remnants = keep;
+    for (const id of g.map.systemIds) {
+      const occ = g.systems[id]!.occupant;
+      if (occ?.player === player && occ.kind === "remnant") occ.remnantIdx -= 1;
+    }
+  }
   p.active = null;
   p.diplomaticTarget = null;
   log(g, `${SPECIES[civ.species]!.name} collapse into a Remnant Empire`);

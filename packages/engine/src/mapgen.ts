@@ -63,8 +63,14 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
 
   // Terrain: an even spread of the six types, then shuffled. Which world is
   // which type changes every game, so habitat strategy changes with it.
+  // Even split, with the remainder handed to randomly chosen types — otherwise
+  // the same type (terran) would silently get an extra world in every galaxy.
   const planets: PlanetType[] = [];
-  for (let i = 0; i < total; i++) planets.push(PLANET_TYPES[i % PLANET_TYPES.length]!);
+  const per = Math.floor(total / PLANET_TYPES.length);
+  for (const type of PLANET_TYPES) for (let i = 0; i < per; i++) planets.push(type);
+  let spare: PlanetType[];
+  [rng, spare] = shuffle(rng, PLANET_TYPES);
+  for (let i = 0; planets.length < total; i++) planets.push(spare[i % spare.length]!);
   let planetOrder: PlanetType[];
   [rng, planetOrder] = shuffle(rng, planets);
 

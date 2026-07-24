@@ -43,9 +43,14 @@ traits:
     name: Ancient
     population: 4
     sw_analog: Forest / Hill
-    status: kept
+    status: reworked
     ability: >-
-      Score +1 Influence for every Relic system you actively control.
+      Relic systems you control score double — +1 Influence each on top of
+      the Relic's normal value.
+    notes: >-
+      v0.6: Relics now score +1 for every civilization (they are what make
+      the core worth taking), so Ancient became a doubler rather than the
+      only way to score them.
 
   - id: berserk
     name: Berserk

@@ -146,7 +146,8 @@ function targetValue(g: GameState, player: PlayerId, target: SystemId, cost: num
   let inf = 1; // base system score
   if (habs.some((h) => def.planets.includes(h))) inf += 1;
   const trait = g.players[player]!.active!.trait;
-  if (trait === "ancient" && def.relic) inf += 1;
+  if (def.relic) inf += 1; // Relics pay every civilization
+  if (trait === "ancient" && def.relic) inf += 1; // and double for Ancient
   if (trait === "mercantile") inf += 1;
   const occ = g.systems[target]!.occupant;
   if (trait === "parasitic" && (occ !== null || g.systems[target]!.neutrals > 0)) inf += 1;

@@ -23,6 +23,11 @@ export function scoreExpandTurn(g: GameState, player: PlayerId): ScoreLine[] {
     const habCount = active.filter((id) => habs.some((h) => hasPlanet(id, h))).length;
     if (habCount > 0) lines.push({ label: "Favored habitat", amount: habCount });
 
+    // Relics reward any civilization that holds them — this is what makes the
+    // heavily-defended core worth pushing into. (Ancient stacks on top, below.)
+    const relics = active.filter((id) => SYSTEMS[id]!.relic).length;
+    if (relics > 0) lines.push({ label: "Relic systems", amount: relics });
+
     if (civ.species === "ossian_prospectors") {
       const barren = active.filter((id) => hasPlanet(id, "barren")).length;
       const n = Math.floor(barren / 2);
@@ -34,8 +39,9 @@ export function scoreExpandTurn(g: GameState, player: PlayerId): ScoreLine[] {
         lines.push({ label: "Catalytic", amount: 2 });
         break;
       case "ancient": {
+        // Stacks with the universal Relic line above, so Ancient doubles Relics.
         const n = active.filter((id) => SYSTEMS[id]!.relic).length;
-        if (n > 0) lines.push({ label: "Ancient: Relic systems", amount: n });
+        if (n > 0) lines.push({ label: "Ancient: Relics doubled", amount: n });
         break;
       }
       case "fortress_building": {

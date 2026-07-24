@@ -128,9 +128,10 @@ Place that many tokens from hand into the conquered system.
 **4. Score Influence:**
 
 - 1 per system your active civilization controls
-- +1 per active system containing a favored-habitat planet
+- +1 per active system whose planet matches your favored habitat
+- **+1 per Relic system your active civilization controls** — Relics pay every civilization, which is what makes the heavily-defended core worth pushing into
 - 1 per system your Remnant Empire controls (two, if Echoing keeps a second Remnant alive)
-- Plus Species, Remnant, Trait, and Relic bonuses
+- Plus Species, Remnant, and Trait bonuses
 
 ### B. Collapse into a Remnant Empire
 
@@ -180,7 +181,7 @@ Traits are the game's random Special Powers. Cut in v0.2: Psionic, Cybernetic, R
 | Adaptive | 2 | Choose a second favored habitat each turn (no cap) | original |
 | Aggressive | 4 | All conquests cost 1 less | Commando |
 | Catalytic | 4 | +2 Influence per turn while active | Alchemist |
-| Ancient | 4 | +1 per Relic system controlled | Forest/Hill |
+| Ancient | 4 | Relic systems you control score double | Forest/Hill |
 | Berserk | 4 | Roll the die before EVERY conquest as a discount | Berserk |
 | Colonizing | 5 | Empty systems cost 1 less | Mounted |
 | Defensive | 5 | Every active system +1 defense | Fortified (loose) |

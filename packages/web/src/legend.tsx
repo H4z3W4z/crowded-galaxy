@@ -106,7 +106,7 @@ export const MAP_LEGEND: LegendEntry[] = [
       </Swatch>
     ),
     title: "Relic (glowing star)",
-    body: "An ancient site. The Ancient trait scores +1 Influence for each Relic system you control. Most Relics sit in the contested galactic core.",
+    body: "An ancient site. Every civilization scores +1 Influence for each Relic world it holds — the Ancient trait doubles it. Four of the five Relics sit in the contested core, which is what makes the centre worth fighting for.",
   },
   {
     swatch: (

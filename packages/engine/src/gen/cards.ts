@@ -129,7 +129,7 @@ export const TRAITS: Record<string, TraitDef> = {
     "id": "ancient",
     "name": "Ancient",
     "population": 4,
-    "ability": "Score +1 Influence for every Relic system you actively control."
+    "ability": "Relic systems you control score double — +1 Influence each on top of the Relic's normal value."
   },
   "berserk": {
     "id": "berserk",

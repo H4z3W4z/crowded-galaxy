@@ -34,7 +34,7 @@ export interface MapViewProps {
 export const MapView = memo(function MapView({ game, selected, reachable, onSelect }: MapViewProps) {
   const wormSet = new Set(WORMHOLES.flat());
   return (
-    <svg viewBox="-40 -40 1080 1080" style={{ width: "100%", height: "100%", display: "block" }}>
+    <svg viewBox="-60 -60 1130 1130" style={{ width: "100%", height: "100%", display: "block" }}>
       <Stars />
       {LANES.map(([a, b], i) => {
         const A = LAYOUT[a]!;
@@ -95,17 +95,12 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
             {occ && !isRemnant && <circle cx={pos.x} cy={pos.y} r={26} fill="none" stroke={ownerColor!} strokeWidth={3} />}
             {isRemnant && <circle cx={pos.x} cy={pos.y} r={26} fill="none" stroke={ownerColor!} strokeWidth={3} strokeDasharray="4 4" />}
             {isSel && <circle cx={pos.x} cy={pos.y} r={28} fill="none" stroke="var(--starlight)" strokeWidth={3} style={{ filter: "drop-shadow(0 0 8px rgba(239,234,248,.9))" }} />}
-            {/* Code chip below the planet for legibility over the art. */}
-            <text x={pos.x} y={pos.y + 42} textAnchor="middle" fill="var(--starlight)" style={{ font: "700 12px var(--font-mono)", paintOrder: "stroke", stroke: "var(--space-0)", strokeWidth: 3.5 }}>
-              {code}
-            </text>
-            <text x={pos.x} y={pos.y + 56} textAnchor="middle" fill="var(--starlight-2)" style={{ font: "10px var(--font-body)", letterSpacing: ".02em", paintOrder: "stroke", stroke: "var(--space-0)", strokeWidth: 3 }}>
-              {def.name}
-            </text>
+            {/* Name labels are drawn in a final pass below, so a neighbour's
+                badges can never cover them. */}
             {canReach && (
               <g>
-                <circle cx={pos.x} cy={pos.y + 26} r={10} fill="var(--p3)" stroke="var(--space-0)" strokeWidth={1.5} />
-                <text x={pos.x} y={pos.y + 30} textAnchor="middle" fill="var(--on-accent)" style={{ font: "700 11px var(--font-mono)" }}>
+                <circle cx={pos.x} cy={pos.y + 21} r={10} fill="var(--p3)" stroke="var(--space-0)" strokeWidth={2} />
+                <text x={pos.x} y={pos.y + 25} textAnchor="middle" fill="var(--on-accent)" style={{ font: "700 11px var(--font-mono)" }}>
                   {cost}
                 </text>
               </g>
@@ -138,6 +133,30 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
               </text>
             )}
           </g>
+        );
+      })}
+      {/* Final pass: one name label per world, drawn above everything so a
+          neighbouring system's badges can never clip it. */}
+      {SYSTEM_IDS.map((code) => {
+        const pos = LAYOUT[code]!;
+        return (
+          <text
+            key={`label-${code}`}
+            x={pos.x}
+            y={pos.y + 44}
+            textAnchor="middle"
+            fill="var(--starlight)"
+            style={{
+              font: "700 11.5px var(--font-body)",
+              letterSpacing: ".01em",
+              paintOrder: "stroke",
+              stroke: "var(--space-0)",
+              strokeWidth: 3.5,
+              pointerEvents: "none",
+            }}
+          >
+            {SYSTEMS[code]!.name}
+          </text>
         );
       })}
     </svg>

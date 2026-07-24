@@ -1,6 +1,7 @@
-// Generates data/map.yaml as a 4-arm spiral galaxy. Each system is a SINGLE
-// planet (Small World-style single-terrain regions), five of each of the six
-// types. Geometry is computed; planet/tags are authored below for balance.
+// Generates data/map.yaml as a 5-arm spiral galaxy: a dense contested core with
+// one arm per core node (no dead sector), each arm a 5-system chain whose tip is
+// a sparse frontier. Each system is a SINGLE planet (single-terrain regions,
+// Small World style). Geometry is computed; planets/tags are authored for balance.
 // Run: node scripts/gen-spiral-map.mjs
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -11,12 +12,14 @@ const CX = 500, CY = 500;
 const rad = (deg) => (deg * Math.PI) / 180;
 const at = (angleDeg, r) => ({ x: Math.round(CX + Math.cos(rad(angleDeg)) * r), y: Math.round(CY + Math.sin(rad(angleDeg)) * r) });
 
-// Spacing — bumped so the planet orbs (rendered ~50px) breathe, and so the
-// second-ring lanes clear the core planets they pass.
-const CORE_RING_R = 118;
-const ARM_R0 = 200, ARM_STEP = 64, ARM_CURL = 15;
+// Geometry. Arms sit 72 deg apart and sweep 40 deg across their length, so they
+// read as distinct curved arms instead of merging into a ring (the v0.4 failure:
+// 75 deg of sweep at 72 deg spacing turned the outer systems into a circle).
+const CORE_RING_R = 122;
+const ARM_R0 = 210, ARM_STEP = 76, ARM_CURL = 10;
 
-// Core: one planet each of the six types. Blue Silence at the center.
+// Core: Blue Silence at the centre plus a five-node ring, one planet of each of
+// the six types, holding four of the five Relics.
 const core = {
   BS: { name: "Blue Silence", planet: "ocean", relic: true, neutrals: 2, pos: { x: CX, y: CY } },
   CN: { name: "Crown Nexus", planet: "terran", relic: true, neutrals: 2, angle: 90 },
@@ -26,14 +29,13 @@ const core = {
   OV: { name: "Orphean Vault", planet: "gas_giant", hazard: true, relic: true, neutrals: 2, angle: 18 },
 };
 
-// Four arms, inner (j0) -> tip (j5). rimGate on the outer frontier (j4,j5).
-// Planet mix across the 24 arm systems is 4 of each type (+1 core each = 5 total).
+// Five arms, one per core node. Inner (j0) -> tip (j4); the outer two are Rim
+// Gates. Planet mix gives 5 of each type (6 volcanic) across the whole map.
 const arms = [
   { core: "CN", codes: [
     { c: "HD", name: "Halcyon Deep", planet: "ocean", neutrals: 1 },
     { c: "RC", name: "Red Choir", planet: "volcanic", neutrals: 1 },
     { c: "SV", name: "Silica Verge", planet: "barren", hazard: true, neutrals: 1 },
-    { c: "AR", name: "Altair Reach", planet: "terran", neutrals: 0 },
     { c: "CW", name: "Cinderwake", planet: "volcanic", rimGate: true, neutrals: 0 },
     { c: "PL", name: "Pelagos", planet: "ocean", rimGate: true, neutrals: 0 },
   ] },
@@ -41,7 +43,6 @@ const arms = [
     { c: "AG", name: "Aurora Gate", planet: "ice", neutrals: 1 },
     { c: "TA", name: "Tethys Arc", planet: "ocean", neutrals: 1 },
     { c: "FH", name: "Forgeheart", planet: "volcanic", hazard: true, neutrals: 1 },
-    { c: "ZC", name: "Zephyr Crown", planet: "gas_giant", neutrals: 0 },
     { c: "NB", name: "Nacre Belt", planet: "ocean", rimGate: true, neutrals: 0 },
     { c: "VG", name: "Viridian Gate", planet: "terran", rimGate: true, neutrals: 0 },
   ] },
@@ -49,7 +50,6 @@ const arms = [
     { c: "GW", name: "Greenwake", planet: "terran", neutrals: 1 },
     { c: "JL", name: "Jove's Lantern", planet: "gas_giant", neutrals: 1 },
     { c: "PA", name: "Pale Anchor", planet: "ice", neutrals: 1 },
-    { c: "OS", name: "Ossuary", planet: "barren", hazard: true, neutrals: 0 },
     { c: "EF", name: "Emberfall", planet: "volcanic", rimGate: true, neutrals: 0 },
     { c: "FM", name: "Frostmere", planet: "ice", rimGate: true, neutrals: 0 },
   ] },
@@ -57,13 +57,19 @@ const arms = [
     { c: "AB", name: "Ashen Bloom", planet: "ice", neutrals: 1 },
     { c: "CS", name: "Cloudspire", planet: "gas_giant", neutrals: 1 },
     { c: "KD", name: "Kestrel Dust", planet: "barren", hazard: true, neutrals: 1 },
-    { c: "MR", name: "Meridian", planet: "terran", neutrals: 0 },
     { c: "BL", name: "Bellows", planet: "gas_giant", rimGate: true, neutrals: 0 },
     { c: "SR", name: "Sable Rift", planet: "barren", rimGate: true, neutrals: 0 },
   ] },
+  { core: "OV", codes: [
+    { c: "AR", name: "Altair Reach", planet: "terran", neutrals: 1 },
+    { c: "ZC", name: "Zephyr Crown", planet: "gas_giant", neutrals: 1 },
+    { c: "OS", name: "Ossuary", planet: "barren", hazard: true, neutrals: 1 },
+    { c: "MR", name: "Meridian", planet: "terran", rimGate: true, neutrals: 0 },
+    { c: "WF", name: "Wraithfall", planet: "volcanic", rimGate: true, neutrals: 0 },
+  ] },
 ];
 
-const ringOf = (j) => (j <= 1 ? "inner" : j <= 3 ? "middle" : "outer");
+const ringOf = (j) => (j <= 1 ? "inner" : j === 2 ? "middle" : "outer");
 const systems = [];
 const lanes = [];
 
@@ -73,7 +79,7 @@ for (const code of ["CN", "RM", "CY", "SO", "OV"]) {
   systems.push({ code, name: d.name, planet: d.planet, relic: d.relic, hazard: d.hazard, neutrals: d.neutrals, ring: "core", pos: at(d.angle, CORE_RING_R) });
   lanes.push(["BS", code]);
 }
-const ringOrder = ["OV", "CN", "RM", "CY", "SO"]; // 18,90,162,234,306
+const ringOrder = ["OV", "CN", "RM", "CY", "SO"]; // 18, 90, 162, 234, 306
 for (let i = 0; i < ringOrder.length; i++) lanes.push([ringOrder[i], ringOrder[(i + 1) % ringOrder.length]]);
 
 for (const arm of arms) {
@@ -87,32 +93,31 @@ for (const arm of arms) {
   });
 }
 
-// Second ring: lateral lanes joining the inner-arm systems into a ring around
-// the core, so the centre is a connected hub rather than four isolated spokes.
-// The four arms occupy four of the five core-ring positions, so the ring closes
-// through OV — the one core node without an arm — and its existing links.
-const innerRing = arms.map((a) => a.codes[0].c); // HD, AG, GW, AB
-for (let i = 0; i < innerRing.length - 1; i++) lanes.push([innerRing[i], innerRing[i + 1]]);
-lanes.push([innerRing[innerRing.length - 1], "OV"]); // AB -> OV; OV-CN-HD closes it
+// Second ring: a clean pentagon joining the five inner-arm systems, so the
+// approach to the core is a crossroads rather than five isolated spokes.
+const innerRing = arms.map((a) => a.codes[0].c); // HD, AG, GW, AB, AR
+for (let i = 0; i < innerRing.length; i++) lanes.push([innerRing[i], innerRing[(i + 1) % innerRing.length]]);
 
+// Wormholes bridge distant arms — the only fast way across the galaxy.
 const wormholes = [
   ["PL", "FM"],
   ["VG", "SR"],
-  ["AR", "OS"],
+  ["WF", "PA"],
 ];
 
 const q = (s) => (/[':]/.test(s) ? JSON.stringify(s) : s);
 let out = `# Crowded Galaxy — Star map (canonical map data)
-# 4-arm SPIRAL GALAXY. Each system is a SINGLE planet (single-terrain regions,
-# Small World style), five of each of the six types. GENERATED by
+# 5-ARM SPIRAL GALAXY: a dense contested core with one arm per core node, each a
+# 5-system chain ending in a sparse frontier. Each system is a SINGLE planet
+# (single-terrain regions, Small World style). GENERATED by
 # scripts/gen-spiral-map.mjs — edit the generator, not this file.
 
 schema: crowded-galaxy-map/2
-version: 0.4
+version: 0.5
 
 config:
   canvas: { width: 1000, height: 1000 }
-  layout: spiral-4arm
+  layout: spiral-5arm
   planets_per_system: 1
   neutral_seeding_note: >-
     Core is defended (2 neutrals each), inner/mid arm systems 1, frontier

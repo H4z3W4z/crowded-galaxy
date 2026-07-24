@@ -77,7 +77,7 @@ function LegendPanel({ onClose }: { onClose: () => void }) {
 
         <h3 style={{ fontSize: "var(--text-lg)", margin: "22px 0 10px" }}>The spiral</h3>
         <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.5 }}>
-          The galaxy is four spiral arms around a dense, heavily defended core. New civilizations enter at the Rim Gates on the outer frontier and push inward. The core holds most of the Relics — it's the contested prize. Wormholes are the only fast way across the galaxy.
+          The galaxy is five spiral arms around a dense, heavily defended core — one arm per core world. New civilizations enter at the Rim Gates on the outer frontier and push inward. The core holds most of the Relics and is the contested prize, but a ring of lateral lanes joins the five inner-arm worlds, so its approaches are a crossroads. Wormholes are the only fast way across the galaxy.
         </div>
         <a
           href="/field-guide.html"

@@ -37,7 +37,7 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "relic": true,
     "neutrals": 2,
     "x": 500,
-    "y": 618
+    "y": 622
   },
   "RM": {
     "code": "RM",
@@ -51,8 +51,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": true,
     "neutrals": 2,
-    "x": 388,
-    "y": 536
+    "x": 384,
+    "y": 538
   },
   "CY": {
     "code": "CY",
@@ -66,8 +66,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 2,
-    "x": 431,
-    "y": 405
+    "x": 428,
+    "y": 401
   },
   "SO": {
     "code": "SO",
@@ -81,8 +81,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 569,
-    "y": 405
+    "x": 572,
+    "y": 401
   },
   "OV": {
     "code": "OV",
@@ -96,8 +96,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": true,
     "relic": true,
     "neutrals": 2,
-    "x": 612,
-    "y": 536
+    "x": 616,
+    "y": 538
   },
   "HD": {
     "code": "HD",
@@ -111,8 +111,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 448,
-    "y": 693
+    "x": 464,
+    "y": 707
   },
   "RC": {
     "code": "RC",
@@ -126,8 +126,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 368,
-    "y": 729
+    "x": 402,
+    "y": 769
   },
   "SV": {
     "code": "SV",
@@ -141,23 +141,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": true,
     "relic": false,
     "neutrals": 1,
-    "x": 268,
-    "y": 732
-  },
-  "AR": {
-    "code": "AR",
-    "name": "Altair Reach",
-    "ring": "middle",
-    "planet": "terran",
-    "planets": [
-      "terran"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 161,
-    "y": 696
+    "x": 319,
+    "y": 814
   },
   "CW": {
     "code": "CW",
@@ -171,8 +156,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 60,
-    "y": 618
+    "x": 218,
+    "y": 836
   },
   "PL": {
     "code": "PL",
@@ -186,8 +171,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": -20,
-    "y": 500
+    "x": 106,
+    "y": 830
   },
   "AG": {
     "code": "AG",
@@ -201,8 +186,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 300,
-    "y": 510
+    "x": 292,
+    "y": 529
   },
   "TA": {
     "code": "TA",
@@ -216,8 +201,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 242,
-    "y": 445
+    "x": 214,
+    "y": 490
   },
   "FH": {
     "code": "FH",
@@ -231,23 +216,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": true,
     "relic": false,
     "neutrals": 1,
-    "x": 208,
-    "y": 351
-  },
-  "ZC": {
-    "code": "ZC",
-    "name": "Zephyr Crown",
-    "ring": "middle",
-    "planet": "gas_giant",
-    "planets": [
-      "gas_giant"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 209,
-    "y": 238
+    "x": 146,
+    "y": 425
   },
   "NB": {
     "code": "NB",
@@ -261,8 +231,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 252,
-    "y": 118
+    "x": 94,
+    "y": 336
   },
   "VG": {
     "code": "VG",
@@ -276,8 +246,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 339,
-    "y": 5
+    "x": 64,
+    "y": 228
   },
   "GW": {
     "code": "GW",
@@ -291,8 +261,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 428,
-    "y": 313
+    "x": 408,
+    "y": 311
   },
   "JL": {
     "code": "JL",
@@ -306,8 +276,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 472,
-    "y": 237
+    "x": 421,
+    "y": 225
   },
   "PA": {
     "code": "PA",
@@ -321,23 +291,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 551,
-    "y": 176
-  },
-  "OS": {
-    "code": "OS",
-    "name": "Ossuary",
-    "ring": "middle",
-    "planet": "barren",
-    "planets": [
-      "barren"
-    ],
-    "rimGate": false,
-    "hazard": true,
-    "relic": false,
-    "neutrals": 0,
-    "x": 659,
-    "y": 142
+    "x": 462,
+    "y": 140
   },
   "EF": {
     "code": "EF",
@@ -351,8 +306,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 787,
-    "y": 146
+    "x": 531,
+    "y": 63
   },
   "FM": {
     "code": "FM",
@@ -366,8 +321,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 921,
-    "y": 194
+    "x": 624,
+    "y": 1
   },
   "AB": {
     "code": "AB",
@@ -381,8 +336,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 655,
-    "y": 374
+    "x": 651,
+    "y": 354
   },
   "CS": {
     "code": "CS",
@@ -396,8 +351,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 741,
-    "y": 393
+    "x": 737,
+    "y": 340
   },
   "KD": {
     "code": "KD",
@@ -411,23 +366,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": true,
     "relic": false,
     "neutrals": 1,
-    "x": 824,
-    "y": 449
-  },
-  "MR": {
-    "code": "MR",
-    "name": "Meridian",
-    "ring": "middle",
-    "planet": "terran",
-    "planets": [
-      "terran"
-    ],
-    "rimGate": false,
-    "hazard": false,
-    "relic": false,
-    "neutrals": 0,
-    "x": 890,
-    "y": 541
+    "x": 831,
+    "y": 353
   },
   "BL": {
     "code": "BL",
@@ -441,8 +381,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 926,
-    "y": 663
+    "x": 925,
+    "y": 394
   },
   "SR": {
     "code": "SR",
@@ -456,10 +396,85 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 921,
-    "y": 806
+    "x": 1013,
+    "y": 464
+  },
+  "AR": {
+    "code": "AR",
+    "name": "Altair Reach",
+    "ring": "inner",
+    "planet": "terran",
+    "planets": [
+      "terran"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 685,
+    "y": 599
+  },
+  "ZC": {
+    "code": "ZC",
+    "name": "Zephyr Crown",
+    "ring": "inner",
+    "planet": "gas_giant",
+    "planets": [
+      "gas_giant"
+    ],
+    "rimGate": false,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 1,
+    "x": 725,
+    "y": 676
+  },
+  "OS": {
+    "code": "OS",
+    "name": "Ossuary",
+    "ring": "middle",
+    "planet": "barren",
+    "planets": [
+      "barren"
+    ],
+    "rimGate": false,
+    "hazard": true,
+    "relic": false,
+    "neutrals": 1,
+    "x": 742,
+    "y": 769
+  },
+  "MR": {
+    "code": "MR",
+    "name": "Meridian",
+    "ring": "outer",
+    "planet": "terran",
+    "planets": [
+      "terran"
+    ],
+    "rimGate": true,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": 732,
+    "y": 871
+  },
+  "WF": {
+    "code": "WF",
+    "name": "Wraithfall",
+    "ring": "outer",
+    "planet": "volcanic",
+    "planets": [
+      "volcanic"
+    ],
+    "rimGate": true,
+    "hazard": false,
+    "relic": false,
+    "neutrals": 0,
+    "x": 693,
+    "y": 977
   }
 } as const;
-export const LANES: [string, string][] = [["BS","CN"],["BS","RM"],["BS","CY"],["BS","SO"],["BS","OV"],["OV","CN"],["CN","RM"],["RM","CY"],["CY","SO"],["SO","OV"],["CN","HD"],["HD","RC"],["RC","SV"],["SV","AR"],["AR","CW"],["CW","PL"],["RM","AG"],["AG","TA"],["TA","FH"],["FH","ZC"],["ZC","NB"],["NB","VG"],["CY","GW"],["GW","JL"],["JL","PA"],["PA","OS"],["OS","EF"],["EF","FM"],["SO","AB"],["AB","CS"],["CS","KD"],["KD","MR"],["MR","BL"],["BL","SR"],["HD","AG"],["AG","GW"],["GW","AB"],["AB","OV"]];
-export const WORMHOLES: [string, string][] = [["PL","FM"],["VG","SR"],["AR","OS"]];
-export const SYSTEM_IDS: string[] = ["BS","CN","RM","CY","SO","OV","HD","RC","SV","AR","CW","PL","AG","TA","FH","ZC","NB","VG","GW","JL","PA","OS","EF","FM","AB","CS","KD","MR","BL","SR"];
+export const LANES: [string, string][] = [["BS","CN"],["BS","RM"],["BS","CY"],["BS","SO"],["BS","OV"],["OV","CN"],["CN","RM"],["RM","CY"],["CY","SO"],["SO","OV"],["CN","HD"],["HD","RC"],["RC","SV"],["SV","CW"],["CW","PL"],["RM","AG"],["AG","TA"],["TA","FH"],["FH","NB"],["NB","VG"],["CY","GW"],["GW","JL"],["JL","PA"],["PA","EF"],["EF","FM"],["SO","AB"],["AB","CS"],["CS","KD"],["KD","BL"],["BL","SR"],["OV","AR"],["AR","ZC"],["ZC","OS"],["OS","MR"],["MR","WF"],["HD","AG"],["AG","GW"],["GW","AB"],["AB","AR"],["AR","HD"]];
+export const WORMHOLES: [string, string][] = [["PL","FM"],["VG","SR"],["WF","PA"]];
+export const SYSTEM_IDS: string[] = ["BS","CN","RM","CY","SO","OV","HD","RC","SV","CW","PL","AG","TA","FH","NB","VG","GW","JL","PA","EF","FM","AB","CS","KD","BL","SR","AR","ZC","OS","MR","WF"];

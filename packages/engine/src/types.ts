@@ -2,6 +2,34 @@ export type PlanetType = "terran" | "ocean" | "barren" | "gas_giant" | "ice" | "
 export type PlayerId = number; // seat index, 0-based
 export type SystemId = string; // two-letter system code
 
+export interface SystemDef {
+  code: string;
+  name: string;
+  ring: "outer" | "middle" | "inner" | "core";
+  planet: PlanetType;
+  planets: PlanetType[]; // 1-element; kept so habitat helpers read uniformly
+  rimGate: boolean;
+  hazard: boolean;
+  relic: boolean;
+  neutrals: number;
+  x: number;
+  y: number;
+}
+
+/**
+ * The galaxy for one game. Generated from the game's seed at creation, so every
+ * game has a different map. Adjacency is precomputed and stored as plain arrays
+ * so the whole map serializes to JSON (database, network) without loss.
+ */
+export interface GameMap {
+  systems: Record<SystemId, SystemDef>;
+  systemIds: SystemId[];
+  lanes: [SystemId, SystemId][];
+  wormholes: [SystemId, SystemId][];
+  adjacency: Record<SystemId, SystemId[]>;
+  wormholeAdj: Record<SystemId, SystemId[]>;
+}
+
 export interface PlayerSeat {
   name: string;
   ai: boolean;
@@ -93,6 +121,7 @@ export interface LogEntry {
 
 export interface GameState {
   config: GameConfig;
+  map: GameMap; // this game's galaxy, generated from the seed
   round: number; // 1-based
   current: PlayerId;
   phase: TurnPhase;

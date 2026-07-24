@@ -6,8 +6,6 @@ import {
   DEFAULT_CONFIG,
   legalTargets,
   SPECIES,
-  SYSTEM_IDS,
-  SYSTEMS,
   TRAITS,
   systemsOf,
 } from "../src/index.js";
@@ -22,10 +20,12 @@ function config(seed: number, seats = 3): GameConfig {
   };
 }
 
-// Topology-agnostic helpers: derive systems from the map so these tests survive
-// any map change (e.g. the ring -> spiral redesign).
-const RIM = SYSTEM_IDS.find((id) => SYSTEMS[id]!.rimGate && !SYSTEMS[id]!.hazard)!;
-const OCEAN_RIM = SYSTEM_IDS.find((id) => SYSTEMS[id]!.rimGate && SYSTEMS[id]!.planets.includes("ocean"))!;
+// Map-agnostic helpers. The galaxy is generated per game from its seed, so
+// tests derive the systems they need from the game in hand rather than from any
+// fixed map.
+const rim = (g: GameState) => g.map.systemIds.find((id) => g.map.systems[id]!.rimGate && !g.map.systems[id]!.hazard)!;
+const oceanRim = (g: GameState) =>
+  g.map.systemIds.find((id) => g.map.systems[id]!.rimGate && g.map.systems[id]!.planet === "ocean");
 
 function cheapest(g: GameState, player = 0): { target: string; cost: number } {
   return legalTargets(g, player).slice().sort((a, b) => a.cost - b.cost)[0]!;
@@ -41,7 +41,7 @@ function allSpare(g: GameState, player: number): Record<string, number> {
 }
 /** Plain conquest cost (no attacker discounts): base 2 + neutrals + hazard. */
 function plainCost(g: GameState, id: string): number {
-  return 2 + g.systems[id]!.neutrals + (SYSTEMS[id]!.hazard ? 1 : 0);
+  return 2 + g.systems[id]!.neutrals + (g.map.systems[id]!.hazard ? 1 : 0);
 }
 
 function playFullGame(seed: number, seats = 3): GameState {
@@ -57,11 +57,11 @@ function playFullGame(seed: number, seats = 3): GameState {
 describe("setup", () => {
   it("seeds neutral defenders per the map", () => {
     const g = createGame(config(1));
-    const total = SYSTEM_IDS.reduce((s, id) => s + g.systems[id]!.neutrals, 0);
-    const authored = SYSTEM_IDS.reduce((s, id) => s + SYSTEMS[id]!.neutrals, 0);
+    const total = g.map.systemIds.reduce((s, id) => s + g.systems[id]!.neutrals, 0);
+    const authored = g.map.systemIds.reduce((s, id) => s + g.map.systems[id]!.neutrals, 0);
     expect(total).toBe(authored);
-    expect(g.systems["BS"]!.neutrals).toBe(2); // the contested core
-    expect(g.systems[RIM]!.neutrals).toBe(0); // frontier rim gates are undefended
+    expect(g.systems[g.map.systemIds[0]!]!.neutrals).toBe(2); // the galactic centre
+    expect(g.systems[rim(g)]!.neutrals).toBe(0); // frontier rim gates are undefended
   });
 
   it("fills a 6-slot market and leaves the decks consistent", () => {
@@ -104,7 +104,7 @@ describe("launch turn", () => {
     g = apply(g, { type: "chooseCivilization", slot: 0 });
     const targets = legalTargets(g, 0).map((t) => t.target);
     expect(targets.length).toBeGreaterThan(0);
-    for (const t of targets) expect(SYSTEMS[t]!.rimGate).toBe(true);
+    for (const t of targets) expect(g.map.systems[t]!.rimGate).toBe(true);
   });
 
   it("an empty rim gate costs 2 for a plain civilization", () => {
@@ -112,7 +112,7 @@ describe("launch turn", () => {
     g.market[0] = { species: "ossian_prospectors", trait: "industrious", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
     const costs = Object.fromEntries(legalTargets(g, 0).map((t) => [t.target, t.cost]));
-    expect(costs[RIM]).toBe(2);
+    expect(costs[rim(g)]).toBe(2);
   });
 });
 
@@ -146,13 +146,19 @@ describe("conquest mechanics", () => {
   it("aggressive discounts every conquest", () => {
     const g = launchAt(9, "ossian_prospectors", "aggressive");
     const costs = Object.fromEntries(legalTargets(g, 0).map((t) => [t.target, t.cost]));
-    expect(costs[RIM]).toBe(1);
+    expect(costs[rim(g)]).toBe(1);
   });
 
   it("thalassi discount applies to all ocean systems, min 1", () => {
-    const g = launchAt(10, "thalassi_compact", "industrious");
-    const costs = Object.fromEntries(legalTargets(g, 0).map((t) => [t.target, t.cost]));
-    expect(costs[OCEAN_RIM]).toBe(1); // empty ocean rim gate: 2 - 1
+    // Galaxies are random, so find one whose frontier includes an ocean world.
+    let g: GameState | null = null;
+    for (let seed = 10; seed < 40 && !g; seed++) {
+      const candidate = launchAt(seed, "thalassi_compact", "industrious");
+      if (oceanRim(candidate)) g = candidate;
+    }
+    expect(g).not.toBeNull();
+    const costs = Object.fromEntries(legalTargets(g!, 0).map((t) => [t.target, t.cost]));
+    expect(costs[oceanRim(g!)!]).toBe(1); // empty ocean rim gate: 2 - 1
   });
 
   it("defender loses one token permanently, survivors redeploy to their smallest system", () => {
@@ -160,17 +166,17 @@ describe("conquest mechanics", () => {
     g.market[0] = { species: "ossian_prospectors", trait: "industrious", influence: 0 };
     g.market[1] = { species: "magmaforged", trait: "catalytic", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: RIM });
-    const m = cheapest(g, 0).target; // P1's second system, adjacent to RIM
+    g = apply(g, { type: "conquer", target: rim(g) });
+    const m = cheapest(g, 0).target; // P1's second system, adjacent to rim(g)
     g = apply(g, { type: "conquer", target: m });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 }); // P2
-    const rimTokens = g.systems[RIM]!.tokens;
+    const rimTokens = g.systems[rim(g)]!.tokens;
     const mBefore = g.systems[m]!.tokens;
-    const cost = 2 + rimTokens; // magmaforged vs non-hazard RIM, no other modifiers
-    g = apply(g, { type: "conquer", target: RIM });
-    expect(g.systems[RIM]!.occupant!.player).toBe(1);
-    expect(g.systems[RIM]!.tokens).toBe(cost);
+    const cost = 2 + rimTokens; // magmaforged vs non-hazard rim(g), no other modifiers
+    g = apply(g, { type: "conquer", target: rim(g) });
+    expect(g.systems[rim(g)]!.occupant!.player).toBe(1);
+    expect(g.systems[rim(g)]!.tokens).toBe(cost);
     expect(g.systems[m]!.tokens).toBe(mBefore + rimTokens - 1); // survivor redeployed to P1's only other system
   });
 
@@ -178,25 +184,25 @@ describe("conquest mechanics", () => {
     let g = createGame(config(12, 2));
     g.market[0] = { species: "ossian_prospectors", trait: "heroic", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: RIM });
+    g = apply(g, { type: "conquer", target: rim(g) });
     g = apply(g, { type: "endConquests" });
-    g = apply(g, { type: "redeploy", dist: { [RIM]: g.players[0]!.active!.hand + 2 } });
-    g = apply(g, { type: "moveBulwarks", systems: [RIM] });
+    g = apply(g, { type: "redeploy", dist: { [rim(g)]: g.players[0]!.active!.hand + 2 } });
+    g = apply(g, { type: "moveBulwarks", systems: [rim(g)] });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    expect(() => apply(g, { type: "conquer", target: RIM })).toThrow(/Bulwark/);
+    expect(() => apply(g, { type: "conquer", target: rim(g) })).toThrow(/Bulwark/);
   });
 
   it("final conquest: only when short 1-3, die decides, conquests end either way", () => {
     let g = createGame(config(13));
     g.market[0] = { species: "ossian_prospectors", trait: "industrious", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g.players[0]!.active!.hand = 1; // RIM costs 2 -> shortfall 1 -> legal gamble
-    expect(() => apply(g, { type: "conquer", target: RIM })).toThrow(/costs 2/);
-    g = apply(g, { type: "finalConquest", target: RIM });
+    g.players[0]!.active!.hand = 1; // rim(g) costs 2 -> shortfall 1 -> legal gamble
+    expect(() => apply(g, { type: "conquer", target: rim(g) })).toThrow(/costs 2/);
+    g = apply(g, { type: "finalConquest", target: rim(g) });
     expect(g.phase).toBe("redeploy");
-    const won = g.systems[RIM]!.occupant?.player === 0;
-    if (won) expect(g.systems[RIM]!.tokens).toBe(1);
+    const won = g.systems[rim(g)]!.occupant?.player === 0;
+    if (won) expect(g.systems[rim(g)]!.tokens).toBe(1);
     else expect(g.players[0]!.active!.hand).toBe(1);
   });
 });
@@ -206,7 +212,7 @@ describe("collapse and remnants", () => {
     let g = createGame(config(14, 2));
     g.market[0] = { species: "ossian_prospectors", trait: "industrious", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: RIM });
+    g = apply(g, { type: "conquer", target: rim(g) });
     const m = cheapest(g, 0).target;
     g = apply(g, { type: "conquer", target: m });
     g = apply(g, { type: "endTurn" });
@@ -216,8 +222,8 @@ describe("collapse and remnants", () => {
     g = apply(g, { type: "collapse" });
     expect(g.players[0]!.active).toBeNull();
     expect(g.players[0]!.remnants).toHaveLength(1);
-    expect(g.systems[RIM]!.occupant!.kind).toBe("remnant");
-    expect(g.systems[RIM]!.tokens).toBe(1);
+    expect(g.systems[rim(g)]!.occupant!.kind).toBe("remnant");
+    expect(g.systems[rim(g)]!.tokens).toBe(1);
     expect(g.systems[m]!.tokens).toBe(1);
     expect(g.players[0]!.influence).toBe(infBefore + 2); // 2 remnant systems
   });
@@ -226,16 +232,16 @@ describe("collapse and remnants", () => {
     let g = createGame(config(15, 2));
     g.market[0] = { species: "cryari_revenants", trait: "industrious", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: RIM });
+    g = apply(g, { type: "conquer", target: rim(g) });
     g = apply(g, { type: "endConquests" });
     const hand = g.players[0]!.active!.hand;
-    g = apply(g, { type: "redeploy", dist: { [RIM]: hand + 2 } });
+    g = apply(g, { type: "redeploy", dist: { [rim(g)]: hand + 2 } });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 }); // P2 launches, no conquest
     g = apply(g, { type: "endTurn" });
-    const tokens = g.systems[RIM]!.tokens;
+    const tokens = g.systems[rim(g)]!.tokens;
     g = apply(g, { type: "collapse" });
-    expect(g.systems[RIM]!.tokens).toBe(tokens); // all kept
+    expect(g.systems[rim(g)]!.tokens).toBe(tokens); // all kept
   });
 
   it("remnant defeated: all tokens removed", () => {
@@ -243,20 +249,20 @@ describe("collapse and remnants", () => {
     g.market[0] = { species: "ossian_prospectors", trait: "industrious", influence: 0 };
     g.market[1] = { species: "magmaforged", trait: "catalytic", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: RIM });
+    g = apply(g, { type: "conquer", target: rim(g) });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 }); // P2 takes any rim gate to burn its turn
-    const p2rim = SYSTEM_IDS.find((id) => SYSTEMS[id]!.rimGate && id !== RIM && !SYSTEMS[id]!.hazard)!;
+    const p2rim = g.map.systemIds.find((id) => g.map.systems[id]!.rimGate && id !== rim(g) && !g.map.systems[id]!.hazard)!;
     g = apply(g, { type: "conquer", target: p2rim });
     g = apply(g, { type: "endTurn" });
-    g = apply(g, { type: "collapse" }); // P1 remnant on RIM
+    g = apply(g, { type: "collapse" }); // P1 remnant on rim(g)
     g = apply(g, { type: "recall", take: allSpare(g, 1) }); // P2 gathers its army
-    const cost = 2 + 1; // RIM: base 2 + 1 remnant token
+    const cost = 2 + 1; // rim(g): base 2 + 1 remnant token
     const before = g.players[1]!.active!.hand;
-    // P2 needs to reach RIM; RIM is a rim gate so a launched/relaunched civ can always enter it.
-    // P2 already holds p2rim; recall to nothing and re-enter RIM as a rim gate.
-    g = apply(g, { type: "conquer", target: RIM });
-    expect(g.systems[RIM]!.occupant!.player).toBe(1);
+    // P2 needs to reach rim(g); rim(g) is a rim gate so a launched/relaunched civ can always enter it.
+    // P2 already holds p2rim; recall to nothing and re-enter rim(g) as a rim gate.
+    g = apply(g, { type: "conquer", target: rim(g) });
+    expect(g.systems[rim(g)]!.occupant!.player).toBe(1);
     expect(g.players[1]!.active!.hand).toBe(before - cost);
     expect(systemsOf(g, 0, "remnant")).toHaveLength(0);
   });
@@ -272,7 +278,7 @@ describe("full games (AI soak)", () => {
       const total = g.players.reduce((s, p) => s + p.influence, 0);
       expect(total).toBeGreaterThan(0);
       for (const p of g.players) expect(p.influence).toBeGreaterThanOrEqual(0);
-      for (const id of SYSTEM_IDS) {
+      for (const id of g.map.systemIds) {
         const sys = g.systems[id]!;
         if (sys.occupant) expect(sys.tokens).toBeGreaterThan(0);
         else expect(sys.tokens).toBe(0);

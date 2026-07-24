@@ -1,7 +1,6 @@
 // End-of-turn Influence scoring. Pure: returns the breakdown without mutating.
 
 import { SPECIES } from "./gen/cards.js";
-import { SYSTEMS, SYSTEM_IDS } from "./gen/map.js";
 import { favoredHabitats, hasPlanet, neighbors, systemsOf } from "./rules.js";
 import type { GameState, PlayerId } from "./types.js";
 
@@ -20,16 +19,16 @@ export function scoreExpandTurn(g: GameState, player: PlayerId): ScoreLine[] {
     if (active.length > 0) lines.push({ label: "Active systems", amount: active.length });
 
     const habs = favoredHabitats(g, player);
-    const habCount = active.filter((id) => habs.some((h) => hasPlanet(id, h))).length;
+    const habCount = active.filter((id) => habs.some((h) => hasPlanet(g, id, h))).length;
     if (habCount > 0) lines.push({ label: "Favored habitat", amount: habCount });
 
     // Relics reward any civilization that holds them — this is what makes the
     // heavily-defended core worth pushing into. (Ancient stacks on top, below.)
-    const relics = active.filter((id) => SYSTEMS[id]!.relic).length;
+    const relics = active.filter((id) => g.map.systems[id]!.relic).length;
     if (relics > 0) lines.push({ label: "Relic systems", amount: relics });
 
     if (civ.species === "ossian_prospectors") {
-      const barren = active.filter((id) => hasPlanet(id, "barren")).length;
+      const barren = active.filter((id) => hasPlanet(g, id, "barren")).length;
       const n = Math.floor(barren / 2);
       if (n > 0) lines.push({ label: "Ossian: paired Barren systems", amount: n });
     }
@@ -40,7 +39,7 @@ export function scoreExpandTurn(g: GameState, player: PlayerId): ScoreLine[] {
         break;
       case "ancient": {
         // Stacks with the universal Relic line above, so Ancient doubles Relics.
-        const n = active.filter((id) => SYSTEMS[id]!.relic).length;
+        const n = active.filter((id) => g.map.systems[id]!.relic).length;
         if (n > 0) lines.push({ label: "Ancient: Relics doubled", amount: n });
         break;
       }
@@ -75,7 +74,7 @@ export function scoreRemnants(g: GameState, player: PlayerId): ScoreLine[] {
   const p = g.players[player]!;
 
   p.remnants.forEach((rem, idx) => {
-    const held = SYSTEM_IDS.filter((id) => {
+    const held = g.map.systemIds.filter((id) => {
       const occ = g.systems[id]!.occupant;
       return occ?.player === player && occ.kind === "remnant" && occ.remnantIdx === idx;
     });
@@ -85,13 +84,13 @@ export function scoreRemnants(g: GameState, player: PlayerId): ScoreLine[] {
 
     switch (rem.species) {
       case "thalassi_compact":
-        if (held.filter((id) => hasPlanet(id, "ocean")).length >= 2) {
+        if (held.filter((id) => hasPlanet(g, id, "ocean")).length >= 2) {
           lines.push({ label: "Thalassi Remnant bonus", amount: 1 });
         }
         break;
       case "pelagic_oracles": {
         const adjacentToOpponent = held.some((id) =>
-          [...neighbors(id)].some((n) => {
+          neighbors(g, id).some((n) => {
             const occ = g.systems[n]!.occupant;
             return occ !== null && occ.player !== player && occ.kind === "active";
           }),
@@ -100,18 +99,18 @@ export function scoreRemnants(g: GameState, player: PlayerId): ScoreLine[] {
         break;
       }
       case "jovian_reavers":
-        if (held.filter((id) => hasPlanet(id, "gas_giant")).length >= 2) {
+        if (held.filter((id) => hasPlanet(g, id, "gas_giant")).length >= 2) {
           lines.push({ label: "Jovian Remnant bonus", amount: 1 });
         }
         break;
       case "ossian_prospectors":
-        if (held.filter((id) => hasPlanet(id, "barren")).length >= 2) {
+        if (held.filter((id) => hasPlanet(g, id, "barren")).length >= 2) {
           lines.push({ label: "Ossian Remnant bonus", amount: 1 });
         }
         break;
       case "verdant_mycelium": {
-        const terran = held.filter((id) => hasPlanet(id, "terran"));
-        const adjacentPair = terran.some((a) => terran.some((b) => a !== b && neighbors(a).has(b)));
+        const terran = held.filter((id) => hasPlanet(g, id, "terran"));
+        const adjacentPair = terran.some((a) => terran.some((b) => a !== b && neighbors(g, a).includes(b)));
         if (adjacentPair) lines.push({ label: "Verdant Remnant bonus", amount: 1 });
         break;
       }

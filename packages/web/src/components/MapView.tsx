@@ -1,7 +1,6 @@
 // Game-connected star map, visual language from the design system's MapView UI kit.
 import { memo } from "react";
-import { LANES, SYSTEMS, SYSTEM_IDS, WORMHOLES, type GameState } from "@cg/engine";
-import { LAYOUT } from "../mapLayout";
+import type { GameState } from "@cg/engine";
 import { PlanetOrb } from "@ds/components/game/PlanetOrb.jsx";
 
 const P_COLORS = ["var(--p1)", "var(--p2)", "var(--p3)", "var(--p4)", "var(--p5)"];
@@ -32,7 +31,9 @@ export interface MapViewProps {
 }
 
 export const MapView = memo(function MapView({ game, selected, reachable, onSelect }: MapViewProps) {
-  const wormSet = new Set(WORMHOLES.flat());
+  const { systems: MAP, systemIds: IDS, lanes: LANES, wormholes: WORMS } = game.map;
+  const LAYOUT = MAP; // systems carry their own x/y
+  const wormSet = new Set(WORMS.flat());
   return (
     <svg viewBox="-60 -60 1130 1130" style={{ width: "100%", height: "100%", display: "block" }}>
       <Stars />
@@ -41,7 +42,7 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
         const B = LAYOUT[b]!;
         return <line key={i} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke="rgba(239,234,248,.16)" strokeWidth={2} style={{ pointerEvents: "none" }} />;
       })}
-      {WORMHOLES.map(([a, b], i) => {
+      {WORMS.map(([a, b], i) => {
         const A = LAYOUT[a]!;
         const B = LAYOUT[b]!;
         const mx = (A.x + B.x) / 2;
@@ -55,8 +56,8 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
           <path key={i} d={`M ${A.x} ${A.y} Q ${cx} ${cy} ${B.x} ${B.y}`} fill="none" stroke="var(--wormhole)" strokeWidth={2.5} strokeDasharray="7 7" opacity={0.85} style={{ filter: "drop-shadow(0 0 5px var(--wormhole))", pointerEvents: "none" }} />
         );
       })}
-      {SYSTEM_IDS.map((code) => {
-        const def = SYSTEMS[code]!;
+      {IDS.map((code) => {
+        const def = MAP[code]!;
         const sys = game.systems[code]!;
         const pos = LAYOUT[code]!;
         const occ = sys.occupant;
@@ -137,7 +138,7 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
       })}
       {/* Final pass: one name label per world, drawn above everything so a
           neighbouring system's badges can never clip it. */}
-      {SYSTEM_IDS.map((code) => {
+      {IDS.map((code) => {
         const pos = LAYOUT[code]!;
         return (
           <text
@@ -155,7 +156,7 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
               pointerEvents: "none",
             }}
           >
-            {SYSTEMS[code]!.name}
+            {MAP[code]!.name}
           </text>
         );
       })}

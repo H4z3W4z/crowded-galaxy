@@ -2,7 +2,6 @@
 // can animate AI turns step by step. Deterministic given the same state.
 
 import { SPECIES, TRAITS } from "./gen/cards.js";
-import { SYSTEMS } from "./gen/map.js";
 import { checkRemnantConquest, conversionTargets, favoredHabitats, hasPlanet, legalTargets, neighbors, systemsOf } from "./rules.js";
 import type { Action, GameState, PlanetType, PlayerId, SystemId } from "./types.js";
 
@@ -80,7 +79,7 @@ export function aiNextAction(g: GameState): Action {
 function bestAdaptiveHabitat(g: GameState, player: PlayerId): PlanetType {
   const counts = new Map<PlanetType, number>();
   for (const { target } of legalTargets(g, player)) {
-    for (const pl of SYSTEMS[target]!.planets) counts.set(pl, (counts.get(pl) ?? 0) + 1);
+    for (const pl of g.map.systems[target]!.planets) counts.set(pl, (counts.get(pl) ?? 0) + 1);
   }
   const own = SPECIES[g.players[player]!.active!.species]!.habitat;
   let best: PlanetType = own === "ocean" ? "terran" : "ocean";
@@ -102,8 +101,8 @@ function bestMarketSlot(g: GameState, player: PlayerId): number {
     if (i > p.influence) return; // cannot afford the skips
     const pop = SPECIES[slot.species]!.population + TRAITS[slot.trait]!.population;
     const habitat = SPECIES[slot.species]!.habitat;
-    const habitatSupply = Object.values(SYSTEMS).filter(
-      (s) => s.planets.includes(habitat) && g.systems[s.code]!.occupant === null,
+    const habitatSupply = Object.values(g.map.systems).filter(
+      (s) => s.planet === habitat && g.systems[s.code]!.occupant === null,
     ).length;
     const score = pop + slot.influence - i + habitatSupply * 0.4;
     if (score > bestScore) {
@@ -141,7 +140,7 @@ function recallPlan(g: GameState, player: PlayerId): Record<SystemId, number> {
 }
 
 function targetValue(g: GameState, player: PlayerId, target: SystemId, cost: number): number {
-  const def = SYSTEMS[target]!;
+  const def = g.map.systems[target]!;
   const habs = favoredHabitats(g, player);
   let inf = 1; // base system score
   if (habs.some((h) => def.planets.includes(h))) inf += 1;
@@ -174,7 +173,7 @@ function biggestThreat(g: GameState, player: PlayerId): PlayerId | null {
   // The opponent with the most active tokens in systems ADJACENT to ours.
   const own = systemsOf(g, player, "active");
   const border = new Set<string>();
-  for (const id of own) for (const n of neighbors(id)) border.add(n);
+  for (const id of own) for (const n of neighbors(g, id)) border.add(n);
   const pressure = new Map<PlayerId, number>();
   for (const n of border) {
     const occ = g.systems[n]!.occupant;

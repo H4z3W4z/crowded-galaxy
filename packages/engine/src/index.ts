@@ -16,5 +16,6 @@ export { scoreExpandTurn, scoreRemnants, totalOf } from "./scoring.js";
 export { aiNextAction } from "./ai.js";
 export { SPECIES, TRAITS, SPECIES_IDS, TRAIT_IDS } from "./gen/cards.js";
 export type { SpeciesDef, TraitDef } from "./gen/cards.js";
-export { SYSTEMS, LANES, WORMHOLES, SYSTEM_IDS } from "./gen/map.js";
-export type { SystemDef } from "./gen/map.js";
+// The galaxy is generated per game (state.map) — there is no global map.
+export { generateMap, DEFAULT_MAPGEN } from "./mapgen.js";
+export type { MapGenOptions } from "./mapgen.js";

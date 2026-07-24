@@ -1,6 +1,6 @@
 import { SPECIES_IDS, TRAIT_IDS } from "./gen/cards.js";
-import { SYSTEMS, SYSTEM_IDS } from "./gen/map.js";
 import { seedState, shuffle } from "./rng.js";
+import { generateMap } from "./mapgen.js";
 import type { GameConfig, GameState, MarketSlot, SystemState } from "./types.js";
 import { RulesError } from "./types.js";
 
@@ -17,6 +17,9 @@ export function createGame(config: GameConfig): GameState {
     throw new RulesError("2-5 players required");
   }
   let rng = seedState(config.seed);
+  // Every game gets its own galaxy, generated from the seed.
+  let map: import("./types.js").GameMap;
+  [rng, map] = generateMap(rng);
   let speciesDeck: string[];
   let traitDeck: string[];
   [rng, speciesDeck] = shuffle(rng, SPECIES_IDS);
@@ -28,11 +31,11 @@ export function createGame(config: GameConfig): GameState {
   }
 
   const systems: Record<string, SystemState> = {};
-  for (const id of SYSTEM_IDS) {
+  for (const id of map.systemIds) {
     systems[id] = {
       occupant: null,
       tokens: 0,
-      neutrals: Math.round(SYSTEMS[id]!.neutrals * config.neutralScale),
+      neutrals: Math.round(map.systems[id]!.neutrals * config.neutralScale),
       starbases: 0,
       bulwark: false,
     };
@@ -40,6 +43,7 @@ export function createGame(config: GameConfig): GameState {
 
   return {
     config,
+    map,
     round: 1,
     current: 0,
     phase: "start",

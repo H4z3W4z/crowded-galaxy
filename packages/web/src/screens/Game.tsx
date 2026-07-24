@@ -7,7 +7,6 @@ import {
   hasPlanet,
   legalTargets,
   SPECIES,
-  SYSTEMS,
   systemsOf,
   TRAITS,
   type PlanetType,
@@ -289,7 +288,7 @@ function PhaseControls({
         )}
         {sel && cost !== undefined ? (
           <>
-            <SystemSummary id={sel} />
+            <SystemSummary game={game} id={sel} />
             <Row style={{ marginTop: 8 }}>
               {short <= 0 && (
                 <Button variant="gold" size="sm" icon="swords" onClick={() => dispatch({ type: "conquer", target: sel })}>
@@ -316,7 +315,7 @@ function PhaseControls({
           </>
         ) : sel && check && !check.legal ? (
           <div style={{ fontSize: 13, color: "var(--ink-3)" }}>
-            {SYSTEMS[sel]!.name}: {check.reason}
+            {game.map.systems[sel]!.name}: {check.reason}
           </div>
         ) : (
           <div style={{ fontSize: 13, color: "var(--ink-3)" }}>Select a highlighted system to conquer.</div>
@@ -386,7 +385,7 @@ function PhaseControls({
             </Button>
           </Row>
         )}
-        {civ?.species === "verdant_mycelium" && !game.turn.verdantPlaced && selected && own.includes(selected) && hasPlanet(selected, "terran") && (
+        {civ?.species === "verdant_mycelium" && !game.turn.verdantPlaced && selected && own.includes(selected) && hasPlanet(game, selected, "terran") && (
           <Row style={{ marginTop: 6 }}>
             <Button variant="secondary" size="sm" icon="leaf" onClick={() => dispatch({ type: "verdantGrow", system: selected })}>
               Grow on {selected}
@@ -442,7 +441,7 @@ function RedeployControls({ game }: { game: NonNullable<ReturnType<typeof useSto
         {own.map((id) => (
           <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--font-mono)", fontSize: 13 }}>
             <span style={{ width: 30 }}>{id}</span>
-            <span style={{ flex: 1, color: "var(--ink-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{SYSTEMS[id]!.name}</span>
+            <span style={{ flex: 1, color: "var(--ink-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{game.map.systems[id]!.name}</span>
             <button className="cg-btn cg-btn--ghost cg-btn--sm" disabled={(dist[id] ?? 0) <= 1} onClick={() => setDist({ ...dist, [id]: (dist[id] ?? 0) - 1 })}>
               −
             </button>
@@ -597,14 +596,12 @@ function Log({ game }: { game: NonNullable<ReturnType<typeof useStore.getState>[
   );
 }
 
-function SystemSummary({ id }: { id: string }) {
-  const def = SYSTEMS[id]!;
+function SystemSummary({ game, id }: { game: NonNullable<ReturnType<typeof useStore.getState>["game"]>; id: string }) {
+  const def = game.map.systems[id]!;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
       <b style={{ fontFamily: "var(--font-display)" }}>{def.name}</b>
-      {def.planets.map((p, i) => (
-        <PlanetIcon key={i} type={p} size={14} />
-      ))}
+      <PlanetIcon type={def.planet} size={14} />
       {def.hazard && <Badge tone="hazard">Hazard</Badge>}
       {def.relic && <Badge tone="relic">Relic</Badge>}
       {def.rimGate && <Badge>Rim gate</Badge>}

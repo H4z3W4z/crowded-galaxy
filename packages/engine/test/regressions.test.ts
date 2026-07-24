@@ -10,8 +10,6 @@ import {
   legalTargets,
   neighbors,
   scoreExpandTurn,
-  SYSTEM_IDS,
-  SYSTEMS,
   systemsOf,
   totalOf,
 } from "../src/index.js";
@@ -26,12 +24,21 @@ function config(seed: number, seats = 2): GameConfig {
   };
 }
 
-// A non-hazard rim gate, one of its non-rim neighbors (reachable only by adjacency),
-// and an adjacent rim gate an opponent can stage from.
-const RIM = SYSTEM_IDS.find((id) => SYSTEMS[id]!.rimGate && !SYSTEMS[id]!.hazard)!;
-const INNER = [...neighbors(RIM)].find((n) => !SYSTEMS[n]!.rimGate)!;
-const ADJ_RIM = [...neighbors(RIM)].find((n) => SYSTEMS[n]!.rimGate)!;
-const OTHER_RIM = SYSTEM_IDS.find((id) => SYSTEMS[id]!.rimGate && id !== RIM && !SYSTEMS[id]!.hazard)!;
+// The galaxy is generated per game, so derive the systems each test needs from
+// the game in hand: a non-hazard rim gate, one of its non-rim neighbours
+// (reachable only by adjacency), and an adjacent rim gate to stage from.
+const rim = (g: GameState) =>
+  g.map.systemIds.find(
+    (id) =>
+      g.map.systems[id]!.rimGate &&
+      !g.map.systems[id]!.hazard &&
+      neighbors(g, id).some((n) => !g.map.systems[n]!.rimGate) &&
+      neighbors(g, id).some((n) => g.map.systems[n]!.rimGate),
+  )!;
+const inner = (g: GameState) => neighbors(g, rim(g)).find((n) => !g.map.systems[n]!.rimGate)!;
+const adjRim = (g: GameState) => neighbors(g, rim(g)).find((n) => g.map.systems[n]!.rimGate)!;
+const otherRim = (g: GameState) =>
+  g.map.systemIds.find((id) => g.map.systems[id]!.rimGate && id !== rim(g) && !g.map.systems[id]!.hazard)!;
 
 describe("panel bug 1: Concord of Many Remnant origins", () => {
   it("a different active civ may launch conquests from the Concord remnant network", () => {
@@ -39,61 +46,61 @@ describe("panel bug 1: Concord of Many Remnant origins", () => {
     g.market[0] = { species: "concord_of_many", trait: "industrious", influence: 0 };
     g.market[1] = { species: "magmaforged", trait: "catalytic", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: RIM });
+    g = apply(g, { type: "conquer", target: rim(g) });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 }); // P2 launches, no conquest
     g = apply(g, { type: "endTurn" });
-    g = apply(g, { type: "collapse" }); // P1: Concord remnant on RIM
+    g = apply(g, { type: "collapse" }); // P1: Concord remnant on rim(g)
     g = apply(g, { type: "recall", take: {} }); // P2 quiet turn
     g = apply(g, { type: "endTurn" });
-    // P1 launches a NEW civ; INNER is adjacent only to the Concord remnant (RIM), not a rim gate.
+    // P1 launches a NEW civ; inner(g) is adjacent only to the Concord remnant (rim(g)), not a rim gate.
     g.market[0] = { species: "kharax_brood", trait: "aggressive", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    const check = checkConquest(g, 0, INNER);
+    const check = checkConquest(g, 0, inner(g));
     expect(check.legal).toBe(true);
-    g = apply(g, { type: "conquer", target: INNER });
-    expect(g.systems[INNER]!.occupant).toEqual({ player: 0, kind: "active", remnantIdx: -1 });
-    expect(g.systems[RIM]!.occupant!.kind).toBe("remnant"); // remnant unharmed
+    g = apply(g, { type: "conquer", target: inner(g) });
+    expect(g.systems[inner(g)]!.occupant).toEqual({ player: 0, kind: "active", remnantIdx: -1 });
+    expect(g.systems[rim(g)]!.occupant!.kind).toBe("remnant"); // remnant unharmed
   });
 });
 
 describe("panel bugs 2/4/7: Pelagic conversion holes", () => {
-  // P1 (ossian + p1Trait) holds RIM (1 token) and INNER; returns in the post phase.
+  // P1 (ossian + p1Trait) holds rim(g) (1 token) and inner(g); returns in the post phase.
   function pelagicSetup(seed: number, p1Trait: string): GameState {
     let g = createGame(config(seed));
     g.market[0] = { species: "ossian_prospectors", trait: p1Trait, influence: 0 };
     g.market[1] = { species: "pelagic_oracles", trait: "industrious", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: RIM });
-    g = apply(g, { type: "conquer", target: INNER });
+    g = apply(g, { type: "conquer", target: rim(g) });
+    g = apply(g, { type: "conquer", target: inner(g) });
     g = apply(g, { type: "endConquests" });
     const hand = g.players[0]!.active!.hand;
-    const rimT = g.systems[RIM]!.tokens;
-    const innerT = g.systems[INNER]!.tokens;
-    g = apply(g, { type: "redeploy", dist: { [RIM]: 1, [INNER]: innerT + rimT - 1 + hand } });
+    const rimT = g.systems[rim(g)]!.tokens;
+    const innerT = g.systems[inner(g)]!.tokens;
+    g = apply(g, { type: "redeploy", dist: { [rim(g)]: 1, [inner(g)]: innerT + rimT - 1 + hand } });
     return g; // post phase
   }
 
   it("bulwarked systems cannot be converted", () => {
     let g = pelagicSetup(42, "heroic");
-    g = apply(g, { type: "moveBulwarks", systems: [RIM] });
+    g = apply(g, { type: "moveBulwarks", systems: [rim(g)] });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 }); // P2 = Pelagic
-    g = apply(g, { type: "conquer", target: ADJ_RIM }); // adjacent to RIM
-    expect(conversionTargets(g, 1)).not.toContain(RIM);
-    expect(() => apply(g, { type: "convertToken", target: RIM })).toThrow(/not a legal conversion/);
+    g = apply(g, { type: "conquer", target: adjRim(g) }); // adjacent to rim(g)
+    expect(conversionTargets(g, 1)).not.toContain(rim(g));
+    expect(() => apply(g, { type: "convertToken", target: rim(g) })).toThrow(/not a legal conversion/);
   });
 
   it("conversion strips the victim's Starbase instead of inheriting it", () => {
     let g = pelagicSetup(43, "fortress_building");
-    g = apply(g, { type: "placeStarbase", system: RIM });
+    g = apply(g, { type: "placeStarbase", system: rim(g) });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: ADJ_RIM });
-    expect(conversionTargets(g, 1)).toContain(RIM);
-    g = apply(g, { type: "convertToken", target: RIM });
-    expect(g.systems[RIM]!.occupant!.player).toBe(1);
-    expect(g.systems[RIM]!.starbases).toBe(0);
+    g = apply(g, { type: "conquer", target: adjRim(g) });
+    expect(conversionTargets(g, 1)).toContain(rim(g));
+    g = apply(g, { type: "convertToken", target: rim(g) });
+    expect(g.systems[rim(g)]!.occupant!.player).toBe(1);
+    expect(g.systems[rim(g)]!.starbases).toBe(0);
   });
 
   it("the Diplomatic pact blocks conversion by the named opponent", () => {
@@ -101,8 +108,8 @@ describe("panel bugs 2/4/7: Pelagic conversion holes", () => {
     g = apply(g, { type: "nameDiplomaticTarget", player: 1 });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: ADJ_RIM });
-    expect(conversionTargets(g, 1)).not.toContain(RIM);
+    g = apply(g, { type: "conquer", target: adjRim(g) });
+    expect(conversionTargets(g, 1)).not.toContain(rim(g));
   });
 });
 
@@ -160,7 +167,7 @@ describe("panel bug: Magmaforged+Stealth hazard double-dip", () => {
     let hazardChecked = false;
     for (let step = 0; step < 6 && !hazardChecked; step++) {
       const opts = legalTargets(g, 0);
-      const hz = opts.find((o) => SYSTEMS[o.target]!.hazard);
+      const hz = opts.find((o) => g.map.systems[o.target]!.hazard);
       if (hz) {
         // Hazard fully ignored: cost is base 2 + neutrals, NOT 2 + neutrals - 1.
         expect(hz.cost).toBe(2 + g.systems[hz.target]!.neutrals);
@@ -181,12 +188,12 @@ describe("panel deviation: dead Remnant leaves play", () => {
     g.market[0] = { species: "ossian_prospectors", trait: "industrious", influence: 0 };
     g.market[1] = { species: "magmaforged", trait: "catalytic", influence: 0 };
     g = apply(g, { type: "chooseCivilization", slot: 0 });
-    g = apply(g, { type: "conquer", target: RIM });
+    g = apply(g, { type: "conquer", target: rim(g) });
     g = apply(g, { type: "endTurn" });
     g = apply(g, { type: "chooseCivilization", slot: 0 }); // P2 burns its turn on another rim gate
-    g = apply(g, { type: "conquer", target: OTHER_RIM });
+    g = apply(g, { type: "conquer", target: otherRim(g) });
     g = apply(g, { type: "endTurn" });
-    g = apply(g, { type: "collapse" }); // P1 remnant on RIM only
+    g = apply(g, { type: "collapse" }); // P1 remnant on rim(g) only
     expect(g.players[0]!.remnants).toHaveLength(1);
     const take: Record<string, number> = {};
     for (const id of systemsOf(g, 1, "active")) {
@@ -194,7 +201,7 @@ describe("panel deviation: dead Remnant leaves play", () => {
       if (spare > 0) take[id] = spare;
     }
     g = apply(g, { type: "recall", take }); // P2 gathers its army, then destroys the remnant
-    g = apply(g, { type: "conquer", target: RIM });
+    g = apply(g, { type: "conquer", target: rim(g) });
     expect(g.players[0]!.remnants).toHaveLength(0);
     expect(g.speciesDiscard).toContain("ossian_prospectors");
   });
@@ -216,11 +223,11 @@ describe("panel bug: Twilight collapse scoring", () => {
       let g = createGame(config(51));
       g.market[0] = { species: "ossian_prospectors", trait: "twilight", influence: 0 };
       g = apply(g, { type: "chooseCivilization", slot: 0 });
-      g = apply(g, { type: "conquer", target: RIM });
-      g = apply(g, { type: "conquer", target: INNER });
+      g = apply(g, { type: "conquer", target: rim(g) });
+      g = apply(g, { type: "conquer", target: inner(g) });
       g = apply(g, { type: "endConquests" });
       const hand = g.players[0]!.active!.hand;
-      g = apply(g, { type: "redeploy", dist: { [RIM]: g.systems[RIM]!.tokens, [INNER]: g.systems[INNER]!.tokens + hand } });
+      g = apply(g, { type: "redeploy", dist: { [rim(g)]: g.systems[rim(g)]!.tokens, [inner(g)]: g.systems[inner(g)]!.tokens + hand } });
       if (twilightCollapse) g = apply(g, { type: "collapse" });
       else g = apply(g, { type: "endTurn" });
       return g.players[0]!.influence;
@@ -229,11 +236,11 @@ describe("panel bug: Twilight collapse scoring", () => {
     let h = createGame(config(51));
     h.market[0] = { species: "ossian_prospectors", trait: "twilight", influence: 0 };
     h = apply(h, { type: "chooseCivilization", slot: 0 });
-    h = apply(h, { type: "conquer", target: RIM });
-    h = apply(h, { type: "conquer", target: INNER });
+    h = apply(h, { type: "conquer", target: rim(h) });
+    h = apply(h, { type: "conquer", target: inner(h) });
     h = apply(h, { type: "endConquests" });
     const hnd = h.players[0]!.active!.hand;
-    h = apply(h, { type: "redeploy", dist: { [RIM]: h.systems[RIM]!.tokens, [INNER]: h.systems[INNER]!.tokens + hnd } });
+    h = apply(h, { type: "redeploy", dist: { [rim(h)]: h.systems[rim(h)]!.tokens, [inner(h)]: h.systems[inner(h)]!.tokens + hnd } });
     const expandScore = totalOf(scoreExpandTurn(h, 0));
 
     expect(run(true)).toBe(expandScore + 2); // expand scoring + 2 remnant systems from the collapse

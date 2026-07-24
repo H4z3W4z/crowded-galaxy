@@ -2,7 +2,6 @@
 // State is treated as immutable from the outside; internally we deep-clone once.
 
 import { SPECIES, TRAITS } from "./gen/cards.js";
-import { SYSTEMS, SYSTEM_IDS } from "./gen/map.js";
 import { nextInt, shuffle } from "./rng.js";
 import {
   checkConquest,
@@ -81,7 +80,7 @@ export function apply(state: GameState, action: Action): GameState {
         if (sys.tokens === 0) {
           sys.occupant = null; // abandoned
           removeCivMarkers(g, id);
-          log(g, `abandoned ${SYSTEMS[id]!.name}`);
+          log(g, `abandoned ${g.map.systems[id]!.name}`);
         }
       }
       enterConquerPhase(g);
@@ -137,23 +136,23 @@ export function apply(state: GameState, action: Action): GameState {
       }
       g.turn.finalConquestUsed = true;
       if (shortfall < 1) {
-        log(g, `the Berserk roll covers the assault — ${SYSTEMS[action.target]!.name} falls`);
+        log(g, `the Berserk roll covers the assault — ${g.map.systems[action.target]!.name} falls`);
         resolveConquest(g, player, action.target, cost);
         endConquerPhase(g);
         return g;
       }
       if (shortfall > 3) {
-        log(g, `the assault on ${SYSTEMS[action.target]!.name} was doomed from the start`);
+        log(g, `the assault on ${g.map.systems[action.target]!.name} was doomed from the start`);
         endConquerPhase(g);
         return g;
       }
       const roll = rollDie(g);
       g.turn.lastDieRoll = roll;
       if (p.active.hand + roll >= cost) {
-        log(g, `reinforcement die: ${roll} — ${SYSTEMS[action.target]!.name} falls`);
+        log(g, `reinforcement die: ${roll} — ${g.map.systems[action.target]!.name} falls`);
         resolveConquest(g, player, action.target, p.active.hand);
       } else {
-        log(g, `reinforcement die: ${roll} — the assault on ${SYSTEMS[action.target]!.name} fails`);
+        log(g, `reinforcement die: ${roll} — the assault on ${g.map.systems[action.target]!.name} fails`);
       }
       endConquerPhase(g);
       return g;
@@ -169,7 +168,7 @@ export function apply(state: GameState, action: Action): GameState {
       sys.occupant = { player, kind: "active", remnantIdx: -1 };
       sys.tokens = 1; // replaced from the supply; victim's token is removed from the game
       g.turn.conversionsUsed.push(victim);
-      log(g, `Pelagic Oracles convert ${SYSTEMS[action.target]!.name} from ${g.config.seats[victim]!.name}`);
+      log(g, `Pelagic Oracles convert ${g.map.systems[action.target]!.name} from ${g.config.seats[victim]!.name}`);
       return g;
     }
 
@@ -181,9 +180,9 @@ export function apply(state: GameState, action: Action): GameState {
       const idx = p.remnants.findIndex((r) => r.species === "cryari_revenants");
       // Pull cost from adjacent remnant stacks, largest first, leaving 1 behind.
       let needed = check.cost;
-      const sources = SYSTEM_IDS.filter((id) => {
+      const sources = g.map.systemIds.filter((id) => {
         const occ = g.systems[id]!.occupant;
-        return occ?.player === player && occ.kind === "remnant" && occ.remnantIdx === idx && neighbors(id).has(action.target);
+        return occ?.player === player && occ.kind === "remnant" && occ.remnantIdx === idx && neighbors(g, id).includes(action.target);
       }).sort((a, b) => g.systems[b]!.tokens - g.systems[a]!.tokens);
       const target = g.systems[action.target]!;
       clearDefender(g, action.target);
@@ -196,7 +195,7 @@ export function apply(state: GameState, action: Action): GameState {
         needed -= give;
       }
       g.turn.remnantConquerUsed = true;
-      log(g, `the Cryari Revenants march on ${SYSTEMS[action.target]!.name}`);
+      log(g, `the Cryari Revenants march on ${g.map.systems[action.target]!.name}`);
       return g;
     }
 
@@ -227,7 +226,7 @@ export function apply(state: GameState, action: Action): GameState {
           g.systems[id]!.occupant = null;
           g.systems[id]!.tokens = 0;
           removeCivMarkers(g, id);
-          log(g, `abandoned ${SYSTEMS[id]!.name}`);
+          log(g, `abandoned ${g.map.systems[id]!.name}`);
         } else {
           g.systems[id]!.tokens = kept;
         }
@@ -248,7 +247,7 @@ export function apply(state: GameState, action: Action): GameState {
       if (total >= 6) throw new RulesError("maximum six Starbases");
       g.systems[action.system]!.starbases += 1;
       g.turn.starbasePlaced = true;
-      log(g, `builds a Starbase at ${SYSTEMS[action.system]!.name}`);
+      log(g, `builds a Starbase at ${g.map.systems[action.system]!.name}`);
       return g;
     }
 
@@ -259,11 +258,11 @@ export function apply(state: GameState, action: Action): GameState {
       if (action.systems.length > 2) throw new RulesError("two Bulwark markers");
       const own = systemsOf(g, player, "active");
       if (action.systems.some((id) => !own.includes(id))) throw new RulesError("Bulwarks go on your systems");
-      for (const id of SYSTEM_IDS) g.systems[id]!.bulwark = false;
+      for (const id of g.map.systemIds) g.systems[id]!.bulwark = false;
       for (const id of action.systems) g.systems[id]!.bulwark = true;
       g.turn.bulwarksMoved = true;
       if (action.systems.length > 0) {
-        log(g, `raises Bulwarks over ${action.systems.map((id) => SYSTEMS[id]!.name).join(" and ")}`);
+        log(g, `raises Bulwarks over ${action.systems.map((id) => g.map.systems[id]!.name).join(" and ")}`);
       }
       return g;
     }
@@ -273,12 +272,12 @@ export function apply(state: GameState, action: Action): GameState {
       if (p.active?.species !== "verdant_mycelium") throw new RulesError("not Verdant Mycelium");
       if (g.turn.verdantPlaced) throw new RulesError("already grown this turn");
       const own = systemsOf(g, player, "active");
-      if (!own.includes(action.system) || !hasPlanet(action.system, "terran")) {
+      if (!own.includes(action.system) || !hasPlanet(g, action.system, "terran")) {
         throw new RulesError("choose one of your Terran systems");
       }
       g.systems[action.system]!.tokens += 1;
       g.turn.verdantPlaced = true;
-      log(g, `the Mycelium spreads on ${SYSTEMS[action.system]!.name}`);
+      log(g, `the Mycelium spreads on ${g.map.systems[action.system]!.name}`);
       return g;
     }
 
@@ -434,7 +433,7 @@ function resolveConquest(g: GameState, player: PlayerId, target: SystemId, token
   const kharaxRevenge =
     defOcc?.kind === "remnant" &&
     g.players[defOcc.player]!.remnants[defOcc.remnantIdx]?.species === "kharax_brood" &&
-    hasPlanet(target, "volcanic");
+    hasPlanet(g, target, "volcanic");
 
   clearDefender(g, target);
   p.active!.hand -= tokensCommitted;
@@ -448,21 +447,21 @@ function resolveConquest(g: GameState, player: PlayerId, target: SystemId, token
   }
 
   g.turn.conquests.push({ system: target, wasNonEmpty });
-  log(g, `conquered ${SYSTEMS[target]!.name} (${tokensCommitted} token${tokensCommitted === 1 ? "" : "s"})`);
+  log(g, `conquered ${g.map.systems[target]!.name} (${tokensCommitted} token${tokensCommitted === 1 ? "" : "s"})`);
 }
 
 /** If a Remnant Empire holds no systems, its species card leaves play for the discard pile. */
 function cleanupDeadRemnant(g: GameState, player: PlayerId, idx: number): void {
   const p = g.players[player]!;
   if (!p.remnants[idx]) return;
-  const holdsAny = SYSTEM_IDS.some((id) => {
+  const holdsAny = g.map.systemIds.some((id) => {
     const occ = g.systems[id]!.occupant;
     return occ?.player === player && occ.kind === "remnant" && occ.remnantIdx === idx;
   });
   if (holdsAny) return;
   const [dead] = p.remnants.splice(idx, 1);
   g.speciesDiscard.push(dead!.species);
-  for (const id of SYSTEM_IDS) {
+  for (const id of g.map.systemIds) {
     const occ = g.systems[id]!.occupant;
     if (occ?.player === player && occ.kind === "remnant" && occ.remnantIdx > idx) occ.remnantIdx -= 1;
   }
@@ -497,7 +496,7 @@ function autoRedeploy(g: GameState, player: PlayerId): void {
         g.systems[id]!.tokens = 0;
         g.systems[id]!.occupant = null;
         removeCivMarkers(g, id);
-        log(g, `abandoned ${SYSTEMS[id]!.name}`);
+        log(g, `abandoned ${g.map.systems[id]!.name}`);
       }
     }
   }
@@ -521,12 +520,12 @@ function autoVerdant(g: GameState, player: PlayerId): void {
   const p = g.players[player]!;
   if (p.active?.species !== "verdant_mycelium" || g.turn.verdantPlaced) return;
   const terran = systemsOf(g, player, "active")
-    .filter((id) => hasPlanet(id, "terran"))
+    .filter((id) => hasPlanet(g, id, "terran"))
     .sort((a, b) => g.systems[a]!.tokens - g.systems[b]!.tokens || a.localeCompare(b));
   if (terran.length > 0) {
     g.systems[terran[0]!]!.tokens += 1;
     g.turn.verdantPlaced = true;
-    log(g, `the Mycelium spreads on ${SYSTEMS[terran[0]!]!.name}`);
+    log(g, `the Mycelium spreads on ${g.map.systems[terran[0]!]!.name}`);
   }
 }
 
@@ -550,7 +549,7 @@ function collapseCiv(g: GameState, player: PlayerId, scoreCollapse: boolean): vo
   p.remnants.forEach((rem, idx) => {
     const kept = echoing && idx === 0;
     if (kept) return;
-    for (const id of SYSTEM_IDS) {
+    for (const id of g.map.systemIds) {
       const occ = g.systems[id]!.occupant;
       if (occ?.player === player && occ.kind === "remnant" && occ.remnantIdx === idx) {
         g.systems[id]!.occupant = null;
@@ -561,7 +560,7 @@ function collapseCiv(g: GameState, player: PlayerId, scoreCollapse: boolean): vo
   });
 
   // Re-index the kept remnant to idx 1 (new remnant becomes idx 0).
-  for (const id of SYSTEM_IDS) {
+  for (const id of g.map.systemIds) {
     const occ = g.systems[id]!.occupant;
     if (occ?.player === player && occ.kind === "remnant") occ.remnantIdx = 1;
   }
@@ -611,8 +610,8 @@ function finishTurn(g: GameState): void {
 
 function computeWinners(g: GameState): PlayerId[] {
   const stats = g.players.map((p, i) => {
-    const systems = SYSTEM_IDS.filter((id) => g.systems[id]!.occupant?.player === i).length;
-    const tokens = SYSTEM_IDS.reduce(
+    const systems = g.map.systemIds.filter((id) => g.systems[id]!.occupant?.player === i).length;
+    const tokens = g.map.systemIds.reduce(
       (s, id) => s + (g.systems[id]!.occupant?.player === i ? g.systems[id]!.tokens : 0),
       0,
     );

@@ -1,44 +1,28 @@
 // Board queries: adjacency, control, conquest cost and legality.
 // Pure functions over GameState — shared by reducer, AI, and UI preview.
+// The galaxy is per-game (state.map), generated from the seed, so nothing here
+// may depend on a module-level map.
 
-import { SYSTEMS, LANES, WORMHOLES, SYSTEM_IDS } from "./gen/map.js";
 import { SPECIES } from "./gen/cards.js";
 import type { GameState, PlayerId, PlanetType, SystemId } from "./types.js";
 
-const adjacency: Record<string, Set<string>> = {};
-const wormholeAdj: Record<string, Set<string>> = {};
-for (const id of SYSTEM_IDS) {
-  adjacency[id] = new Set();
-  wormholeAdj[id] = new Set();
-}
-for (const [a, b] of LANES) {
-  adjacency[a]!.add(b);
-  adjacency[b]!.add(a);
-}
-for (const [a, b] of WORMHOLES) {
-  adjacency[a]!.add(b);
-  adjacency[b]!.add(a);
-  wormholeAdj[a]!.add(b);
-  wormholeAdj[b]!.add(a);
+export function neighbors(g: GameState, id: SystemId): readonly SystemId[] {
+  return g.map.adjacency[id] ?? [];
 }
 
-export function neighbors(id: SystemId): ReadonlySet<SystemId> {
-  return adjacency[id] ?? new Set();
-}
-
-export function isWormholeLink(a: SystemId, b: SystemId): boolean {
-  return wormholeAdj[a]?.has(b) ?? false;
+export function isWormholeLink(g: GameState, a: SystemId, b: SystemId): boolean {
+  return g.map.wormholeAdj[a]?.includes(b) ?? false;
 }
 
 export function systemsOf(g: GameState, player: PlayerId, kind: "active" | "remnant"): SystemId[] {
-  return SYSTEM_IDS.filter((id) => {
+  return g.map.systemIds.filter((id) => {
     const occ = g.systems[id]!.occupant;
     return occ !== null && occ.player === player && occ.kind === kind;
   });
 }
 
-export function hasPlanet(id: SystemId, type: PlanetType): boolean {
-  return SYSTEMS[id]!.planets.includes(type);
+export function hasPlanet(g: GameState, id: SystemId, type: PlanetType): boolean {
+  return g.map.systems[id]!.planet === type;
 }
 
 function speciesOf(g: GameState, player: PlayerId): string | null {
@@ -61,7 +45,7 @@ function originSystems(g: GameState, player: PlayerId): SystemId[] {
   const concordIdx = p.remnants.findIndex((r) => r.species === "concord_of_many");
   if (concordIdx !== -1) {
     return own.concat(
-      SYSTEM_IDS.filter((id) => {
+      g.map.systemIds.filter((id) => {
         const occ = g.systems[id]!.occupant;
         return occ?.player === player && occ.kind === "remnant" && occ.remnantIdx === concordIdx;
       }),
@@ -81,7 +65,7 @@ export interface ConquestCheck {
 export function checkConquest(g: GameState, player: PlayerId, target: SystemId): ConquestCheck {
   const civ = g.players[player]!.active;
   const sys = g.systems[target];
-  const def = SYSTEMS[target];
+  const def = g.map.systems[target];
   const illegal = (reason: string): ConquestCheck => ({ legal: false, reason, cost: 0, viaWormhole: false });
   if (!civ) return illegal("no active civilization");
   if (!sys || !def) return illegal("unknown system");
@@ -103,16 +87,16 @@ export function checkConquest(g: GameState, player: PlayerId, target: SystemId):
   let viaWormhole = false;
   if (hasBoard) {
     for (const o of origins) {
-      if (neighbors(o).has(target)) {
+      if (neighbors(g, o).includes(target)) {
         reachable = true;
-        if (isWormholeLink(o, target)) viaWormhole = true;
+        if (isWormholeLink(g, o, target)) viaWormhole = true;
       }
     }
     // Nomadic: any conquest may enter through any Rim Gate.
     if (!reachable && trait === "nomadic" && def.rimGate) reachable = true;
     // Quantum Drive: shared planet type with any controlled system, adjacency-free.
     if (!reachable && trait === "quantum_drive") {
-      reachable = origins.some((o) => SYSTEMS[o]!.planets.some((p) => def.planets.includes(p)));
+      reachable = origins.some((o) => g.map.systems[o]!.planets.some((p) => def.planets.includes(p)));
     }
   } else {
     // Launch (or re-entry after being wiped out): enter through any Rim Gate.
@@ -127,13 +111,13 @@ export function checkConquest(g: GameState, player: PlayerId, target: SystemId):
 /** Deterministic part of the cost (Berserk's die roll is applied by the reducer). */
 export function conquestCost(g: GameState, player: PlayerId, target: SystemId, viaWormhole: boolean): number {
   const sys = g.systems[target]!;
-  const def = SYSTEMS[target]!;
+  const def = g.map.systems[target]!;
   const civ = g.players[player]!.active!;
   const occ = sys.occupant;
 
   let defenderTokens = occ ? sys.tokens : sys.neutrals;
   // Heliox Remnant: tokens in Gas Giant systems count double.
-  if (occ?.kind === "remnant" && hasPlanet(target, "gas_giant")) {
+  if (occ?.kind === "remnant" && hasPlanet(g, target, "gas_giant")) {
     const rem = g.players[occ.player]!.remnants[occ.remnantIdx];
     if (rem?.species === "heliox_aerostats") defenderTokens *= 2;
   }
@@ -150,16 +134,16 @@ export function conquestCost(g: GameState, player: PlayerId, target: SystemId, v
   if (occ) {
     const owner = g.players[occ.player]!;
     const defSpecies = occ.kind === "active" ? owner.active?.species : owner.remnants[occ.remnantIdx]?.species;
-    if (defSpecies === "ferrum_continuum" && hasPlanet(target, "barren")) cost += 1;
+    if (defSpecies === "ferrum_continuum" && hasPlanet(g, target, "barren")) cost += 1;
     if (occ.kind === "active" && owner.active?.trait === "defensive") cost += 1;
-    if (occ.kind === "remnant" && defSpecies === "vitrifrost_collective" && hasPlanet(target, "ice")) cost += 1;
+    if (occ.kind === "remnant" && defSpecies === "vitrifrost_collective" && hasPlanet(g, target, "ice")) cost += 1;
     if (occ.kind === "remnant" && defSpecies === "magmaforged" && def.hazard) cost += 1;
   }
 
   // Attacker discounts.
   const empty = !occ && sys.neutrals === 0;
-  if (civ.species === "thalassi_compact" && hasPlanet(target, "ocean")) cost -= 1;
-  if (civ.species === "heliox_aerostats" && hasPlanet(target, "gas_giant")) cost -= 1;
+  if (civ.species === "thalassi_compact" && hasPlanet(g, target, "ocean")) cost -= 1;
+  if (civ.species === "heliox_aerostats" && hasPlanet(g, target, "gas_giant")) cost -= 1;
   if (civ.trait === "aggressive") cost -= 1;
   if (civ.trait === "colonizing" && empty) cost -= 1;
   if (civ.trait === "wormhole_savvy" && viaWormhole) cost -= 1;
@@ -170,7 +154,7 @@ export function conquestCost(g: GameState, player: PlayerId, target: SystemId, v
 /** Every system the current player's active civ could legally target right now (hand size ignored). */
 export function legalTargets(g: GameState, player: PlayerId): { target: SystemId; cost: number }[] {
   const out: { target: SystemId; cost: number }[] = [];
-  for (const id of SYSTEM_IDS) {
+  for (const id of g.map.systemIds) {
     const c = checkConquest(g, player, id);
     if (c.legal) out.push({ target: id, cost: c.cost });
   }
@@ -191,22 +175,22 @@ export function checkRemnantConquest(g: GameState, player: PlayerId, target: Sys
   if (occ && occ.kind === "active" && g.players[occ.player]!.diplomaticTarget === player) {
     return illegal("blocked by Diplomatic pact");
   }
-  const remSystems = SYSTEM_IDS.filter((id) => {
+  const remSystems = g.map.systemIds.filter((id) => {
     const o = g.systems[id]!.occupant;
     return o?.player === player && o.kind === "remnant" && o.remnantIdx === idx;
   });
   let viaWormhole = false;
   const reachable = remSystems.some((o) => {
-    if (!neighbors(o).has(target)) return false;
-    if (isWormholeLink(o, target)) viaWormhole = true;
+    if (!neighbors(g, o).includes(target)) return false;
+    if (isWormholeLink(g, o, target)) viaWormhole = true;
     return true;
   });
   if (!reachable) return illegal("not adjacent to your Remnant");
 
   // Base cost only — remnants have no trait, no species attack discounts.
-  const def = SYSTEMS[target]!;
+  const def = g.map.systems[target]!;
   let defenderTokens = occ ? sys.tokens : sys.neutrals;
-  if (occ?.kind === "remnant" && hasPlanet(target, "gas_giant")) {
+  if (occ?.kind === "remnant" && hasPlanet(g, target, "gas_giant")) {
     const rem = g.players[occ.player]!.remnants[occ.remnantIdx];
     if (rem?.species === "heliox_aerostats") defenderTokens *= 2;
   }
@@ -214,16 +198,16 @@ export function checkRemnantConquest(g: GameState, player: PlayerId, target: Sys
   if (occ) {
     const owner = g.players[occ.player]!;
     const defSpecies = occ.kind === "active" ? owner.active?.species : owner.remnants[occ.remnantIdx]?.species;
-    if (defSpecies === "ferrum_continuum" && hasPlanet(target, "barren")) cost += 1;
+    if (defSpecies === "ferrum_continuum" && hasPlanet(g, target, "barren")) cost += 1;
     if (occ.kind === "active" && owner.active?.trait === "defensive") cost += 1;
-    if (occ.kind === "remnant" && defSpecies === "vitrifrost_collective" && hasPlanet(target, "ice")) cost += 1;
+    if (occ.kind === "remnant" && defSpecies === "vitrifrost_collective" && hasPlanet(g, target, "ice")) cost += 1;
     if (occ.kind === "remnant" && defSpecies === "magmaforged" && def.hazard) cost += 1;
   }
   cost = Math.max(1, cost);
 
   // Paying: pull spare tokens (leaving 1 behind) from remnant systems adjacent to the target.
   const spare = remSystems
-    .filter((id) => neighbors(id).has(target))
+    .filter((id) => neighbors(g, id).includes(target))
     .reduce((sum, id) => sum + Math.max(0, g.systems[id]!.tokens - 1), 0);
   if (spare < cost) return illegal(`needs ${cost} spare Remnant population adjacent, has ${spare}`);
   return { legal: true, cost, viaWormhole };
@@ -234,14 +218,14 @@ export function conversionTargets(g: GameState, player: PlayerId): SystemId[] {
   if (g.players[player]!.active?.species !== "pelagic_oracles") return [];
   const own = new Set(systemsOf(g, player, "active"));
   const out: SystemId[] = [];
-  for (const id of SYSTEM_IDS) {
+  for (const id of g.map.systemIds) {
     const sys = g.systems[id]!;
     const occ = sys.occupant;
     if (!occ || occ.kind !== "active" || occ.player === player || sys.tokens !== 1) continue;
     if (sys.bulwark) continue; // Bulwarks stop conversion, not just conquest
     if (g.players[occ.player]!.diplomaticTarget === player) continue; // pact covers conversion
     if (g.turn.conversionsUsed.includes(occ.player)) continue;
-    if ([...neighbors(id)].some((n) => own.has(n))) out.push(id);
+    if (neighbors(g, id).some((n) => own.has(n))) out.push(id);
   }
   return out;
 }

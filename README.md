@@ -12,7 +12,7 @@ and empires that die into persistent Remnants. Web first, iOS/iPad later.
 | `Background/crowded-galaxy-prototype-v0.1.md` | Original design for historical reference |
 | `data/species.yaml` | Canonical card data — 12 species |
 | `data/traits.yaml` | Canonical card data — 20 traits (random special powers) |
-| `data/map.yaml` | Canonical map — 31 systems (5-arm spiral), hyperlanes, wormholes, neutral seeding, board coordinates |
+| `data/map.yaml` | Reference sample of one galaxy. **Maps are generated per game** by `packages/engine/src/mapgen.ts` — the live game does not read this file. |
 
 The YAML files are the single source of truth for cards and map; tables in
 the design docs are summaries. Balance changes are YAML edits.

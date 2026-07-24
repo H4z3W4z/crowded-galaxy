@@ -92,9 +92,9 @@ export const SPECIES: Record<string, SpeciesDef> = {
   "verdant_mycelium": {
     "id": "verdant_mycelium",
     "name": "Verdant Mycelium",
-    "population": 5,
+    "population": 3,
     "habitat": "terran",
-    "active": "At the end of redeployment, add one population token from the supply to one Terran system you control.",
+    "active": "On a turn you conquered at least one system, add one population token from the supply to a Terran system you control at the end of redeployment.",
     "remnant": "Score +1 Influence if your Remnants control two adjacent Terran systems."
   },
   "concord_of_many": {

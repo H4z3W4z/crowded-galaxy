@@ -271,6 +271,9 @@ export function apply(state: GameState, action: Action): GameState {
       requirePhase(g, "post");
       if (p.active?.species !== "verdant_mycelium") throw new RulesError("not Verdant Mycelium");
       if (g.turn.verdantPlaced) throw new RulesError("already grown this turn");
+      // The Mycelium spreads only where it has newly rooted — no growth on a
+      // turn you did not conquer. This is what stops the perpetual empire.
+      if (g.turn.conquests.length === 0) throw new RulesError("the Mycelium only spreads on a turn you conquered");
       const own = systemsOf(g, player, "active");
       if (!own.includes(action.system) || !hasPlanet(g, action.system, "terran")) {
         throw new RulesError("choose one of your Terran systems");
@@ -519,6 +522,7 @@ function autoRedeploy(g: GameState, player: PlayerId): void {
 function autoVerdant(g: GameState, player: PlayerId): void {
   const p = g.players[player]!;
   if (p.active?.species !== "verdant_mycelium" || g.turn.verdantPlaced) return;
+  if (g.turn.conquests.length === 0) return; // spreads only where newly rooted
   const terran = systemsOf(g, player, "active")
     .filter((id) => hasPlanet(g, id, "terran"))
     .sort((a, b) => g.systems[a]!.tokens - g.systems[b]!.tokens || a.localeCompare(b));

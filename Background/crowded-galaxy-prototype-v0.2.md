@@ -169,7 +169,7 @@ Abilities are unhedged: no "first per turn" rationing. Balance lives in populati
 | Vitrifrost Collective | 5 | Ice | Never lose casualties; all survivors redeploy | Ice Remnants +1 defense | Elves |
 | Kharax Brood | 5 | Volcanic | +1 token per 2 non-empty systems conquered | Attacker loses 1 token conquering Volcanic Remnants | Skeletons |
 | Magmaforged | 6 | Volcanic | Ignore all Hazard modifiers | Remnants in Hazards +1 defense | Giants/Underworld |
-| Verdant Mycelium | 5 | Terran | +1 token to a Terran system each redeploy | +1 if 2 adjacent Terran Remnant systems | original |
+| Verdant Mycelium | 3 | Terran | +1 token to a Terran system, only on a turn you conquered | +1 if 2 adjacent Terran Remnant systems | original |
 | Concord of Many | 7 | Terran | Expand through own Remnants without harm | Remnant systems usable as conquest origins | original |
 
 ## 8. Traits (summary — canonical: `data/traits.yaml`)

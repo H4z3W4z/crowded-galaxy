@@ -168,16 +168,25 @@ species:
 
   - id: verdant_mycelium
     name: Verdant Mycelium
-    population: 5
+    population: 3
     habitat: terran
     sw_analog: original
-    status: kept
+    status: reworked
     active: >-
-      At the end of redeployment, add one population token from the supply
-      to one Terran system you control.
+      On a turn you conquered at least one system, add one population token
+      from the supply to a Terran system you control at the end of
+      redeployment.
     remnant: >-
       Score +1 Influence if your Remnants control two adjacent Terran
       systems.
+    notes: >-
+      v0.6: growth now requires conquering that turn. Unconditional growth
+      compounded every turn whether or not you did anything, which made
+      Verdant the perpetual-empire turtle the adversarial panel warned
+      about — top of the roster at 55.7 and rarely collapsing. Population
+      5 -> 3: the growth engine is the value, so it buys a fragile body.
+      Measured 55.7 -> 47.4, now level with Cryari and Concord instead of
+      10 points clear.
 
   - id: concord_of_many
     name: Concord of Many

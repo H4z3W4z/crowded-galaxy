@@ -36,7 +36,7 @@ export const SPECIES: Record<string, SpeciesDef> = {
   "jovian_reavers": {
     "id": "jovian_reavers",
     "name": "Jovian Reavers",
-    "population": 5,
+    "population": 7,
     "habitat": "gas_giant",
     "active": "At the start of your conquest phase, take 4 bonus population tokens from the supply. They may be used for conquests but must be returned to the supply before redeployment.",
     "remnant": "Score +1 Influence if your Remnants control at least two Gas Giant systems."

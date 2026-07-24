@@ -162,7 +162,7 @@ Abilities are unhedged: no "first per turn" rationing. Balance lives in populati
 | Thalassi Compact | 6 | Ocean | Ocean systems cost 1 less | +1 if 2+ Ocean Remnant systems | Tritons |
 | Pelagic Oracles | 5 | Ocean | Convert lone adjacent enemy tokens (1/turn/opponent) | +1 if Remnants adjacent to an opponent | Sorcerers |
 | Heliox Aerostats | 4 | Gas Giant | Conquer any Gas Giant on the map, adjacency-free | Gas Giant Remnants count as 2 pop | Giants |
-| Jovian Reavers | 5 | Gas Giant | +4 supply tokens for conquest only | +1 if 2+ Gas Giant Remnant systems | Amazons |
+| Jovian Reavers | 7 | Gas Giant | +4 supply tokens for conquest only | +1 if 2+ Gas Giant Remnant systems | Amazons |
 | Ferrum Continuum | 5 | Barren | Barren systems +1 defense | Barren Remnants keep +1 defense | Trolls |
 | Ossian Prospectors | 7 | Barren | +1 per system with 2+ Barren planets | +1 if Remnants hold a 3-planet system | Dwarves |
 | Cryari Revenants | 8 | Ice | None — raw numbers | Remnant keeps ALL tokens, may conquer 1 system/turn | Ghouls + Ratmen |

@@ -59,7 +59,7 @@ species:
 
   - id: jovian_reavers
     name: Jovian Reavers
-    population: 5
+    population: 7
     habitat: gas_giant
     sw_analog: Amazons
     status: reworked
@@ -72,8 +72,13 @@ species:
       Score +1 Influence if your Remnants control at least two Gas Giant
       systems.
     notes: >-
-      Tempo archetype — huge turns, fragile holdings, natural
-      early-collapse candidate.
+      Tempo archetype, faithful to Small World's Amazons: reach far, hold
+      little. v0.6 — was the weakest species at 33.4 because population 5
+      was simply too small a body for a race whose reach is temporary.
+      Repriced 5 -> 7 (measured: 42.8, mid-table). An earlier attempt to
+      let committed raiders stay on the board measured at 103.6 — roughly
+      double the field — because the loan recurs every turn, so it is
+      compounding permanent growth that no population value can price.
 
   - id: ferrum_continuum
     name: Ferrum Continuum

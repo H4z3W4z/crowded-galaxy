@@ -111,8 +111,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 453,
-    "y": 676
+    "x": 448,
+    "y": 693
   },
   "RC": {
     "code": "RC",
@@ -126,8 +126,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 376,
-    "y": 715
+    "x": 368,
+    "y": 729
   },
   "SV": {
     "code": "SV",
@@ -141,8 +141,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": true,
     "relic": false,
     "neutrals": 1,
-    "x": 278,
-    "y": 722
+    "x": 268,
+    "y": 732
   },
   "AR": {
     "code": "AR",
@@ -156,8 +156,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 171,
-    "y": 690
+    "x": 161,
+    "y": 696
   },
   "CW": {
     "code": "CW",
@@ -171,8 +171,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 69,
-    "y": 615
+    "x": 60,
+    "y": 618
   },
   "PL": {
     "code": "PL",
@@ -186,7 +186,7 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": -12,
+    "x": -20,
     "y": 500
   },
   "AG": {
@@ -201,7 +201,7 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 318,
+    "x": 300,
     "y": 510
   },
   "TA": {
@@ -216,8 +216,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 257,
-    "y": 448
+    "x": 242,
+    "y": 445
   },
   "FH": {
     "code": "FH",
@@ -231,8 +231,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": true,
     "relic": false,
     "neutrals": 1,
-    "x": 220,
-    "y": 357
+    "x": 208,
+    "y": 351
   },
   "ZC": {
     "code": "ZC",
@@ -246,8 +246,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 218,
-    "y": 246
+    "x": 209,
+    "y": 238
   },
   "NB": {
     "code": "NB",
@@ -261,8 +261,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 257,
-    "y": 126
+    "x": 252,
+    "y": 118
   },
   "VG": {
     "code": "VG",
@@ -276,8 +276,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 342,
-    "y": 13
+    "x": 339,
+    "y": 5
   },
   "GW": {
     "code": "GW",
@@ -291,8 +291,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 435,
-    "y": 330
+    "x": 428,
+    "y": 313
   },
   "JL": {
     "code": "JL",
@@ -306,8 +306,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 474,
-    "y": 253
+    "x": 472,
+    "y": 237
   },
   "PA": {
     "code": "PA",
@@ -321,8 +321,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 549,
-    "y": 190
+    "x": 551,
+    "y": 176
   },
   "OS": {
     "code": "OS",
@@ -336,8 +336,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": true,
     "relic": false,
     "neutrals": 0,
-    "x": 655,
-    "y": 153
+    "x": 659,
+    "y": 142
   },
   "EF": {
     "code": "EF",
@@ -351,8 +351,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 781,
-    "y": 153
+    "x": 787,
+    "y": 146
   },
   "FM": {
     "code": "FM",
@@ -366,8 +366,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 914,
-    "y": 199
+    "x": 921,
+    "y": 194
   },
   "AB": {
     "code": "AB",
@@ -381,8 +381,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 641,
-    "y": 385
+    "x": 655,
+    "y": 374
   },
   "CS": {
     "code": "CS",
@@ -396,8 +396,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 1,
-    "x": 727,
-    "y": 399
+    "x": 741,
+    "y": 393
   },
   "KD": {
     "code": "KD",
@@ -411,8 +411,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": true,
     "relic": false,
     "neutrals": 1,
-    "x": 810,
-    "y": 451
+    "x": 824,
+    "y": 449
   },
   "MR": {
     "code": "MR",
@@ -426,8 +426,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 878,
-    "y": 540
+    "x": 890,
+    "y": 541
   },
   "BL": {
     "code": "BL",
@@ -441,8 +441,8 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 916,
-    "y": 660
+    "x": 926,
+    "y": 663
   },
   "SR": {
     "code": "SR",
@@ -456,10 +456,10 @@ export const SYSTEMS: Record<string, SystemDef> = {
     "hazard": false,
     "relic": false,
     "neutrals": 0,
-    "x": 914,
-    "y": 801
+    "x": 921,
+    "y": 806
   }
 } as const;
-export const LANES: [string, string][] = [["BS","CN"],["BS","RM"],["BS","CY"],["BS","SO"],["BS","OV"],["OV","CN"],["CN","RM"],["RM","CY"],["CY","SO"],["SO","OV"],["CN","HD"],["HD","RC"],["RC","SV"],["SV","AR"],["AR","CW"],["CW","PL"],["RM","AG"],["AG","TA"],["TA","FH"],["FH","ZC"],["ZC","NB"],["NB","VG"],["CY","GW"],["GW","JL"],["JL","PA"],["PA","OS"],["OS","EF"],["EF","FM"],["SO","AB"],["AB","CS"],["CS","KD"],["KD","MR"],["MR","BL"],["BL","SR"]];
+export const LANES: [string, string][] = [["BS","CN"],["BS","RM"],["BS","CY"],["BS","SO"],["BS","OV"],["OV","CN"],["CN","RM"],["RM","CY"],["CY","SO"],["SO","OV"],["CN","HD"],["HD","RC"],["RC","SV"],["SV","AR"],["AR","CW"],["CW","PL"],["RM","AG"],["AG","TA"],["TA","FH"],["FH","ZC"],["ZC","NB"],["NB","VG"],["CY","GW"],["GW","JL"],["JL","PA"],["PA","OS"],["OS","EF"],["EF","FM"],["SO","AB"],["AB","CS"],["CS","KD"],["KD","MR"],["MR","BL"],["BL","SR"],["HD","AG"],["AG","GW"],["GW","AB"],["AB","OV"]];
 export const WORMHOLES: [string, string][] = [["PL","FM"],["VG","SR"],["AR","OS"]];
 export const SYSTEM_IDS: string[] = ["BS","CN","RM","CY","SO","OV","HD","RC","SV","AR","CW","PL","AG","TA","FH","ZC","NB","VG","GW","JL","PA","OS","EF","FM","AB","CS","KD","MR","BL","SR"];

@@ -11,9 +11,10 @@ const CX = 500, CY = 500;
 const rad = (deg) => (deg * Math.PI) / 180;
 const at = (angleDeg, r) => ({ x: Math.round(CX + Math.cos(rad(angleDeg)) * r), y: Math.round(CY + Math.sin(rad(angleDeg)) * r) });
 
-// Spacing — bumped so the planet orbs (rendered ~50px) breathe.
+// Spacing — bumped so the planet orbs (rendered ~50px) breathe, and so the
+// second-ring lanes clear the core planets they pass.
 const CORE_RING_R = 118;
-const ARM_R0 = 182, ARM_STEP = 66, ARM_CURL = 15;
+const ARM_R0 = 200, ARM_STEP = 64, ARM_CURL = 15;
 
 // Core: one planet each of the six types. Blue Silence at the center.
 const core = {
@@ -85,6 +86,14 @@ for (const arm of arms) {
     prev = s.c;
   });
 }
+
+// Second ring: lateral lanes joining the inner-arm systems into a ring around
+// the core, so the centre is a connected hub rather than four isolated spokes.
+// The four arms occupy four of the five core-ring positions, so the ring closes
+// through OV — the one core node without an arm — and its existing links.
+const innerRing = arms.map((a) => a.codes[0].c); // HD, AG, GW, AB
+for (let i = 0; i < innerRing.length - 1; i++) lanes.push([innerRing[i], innerRing[i + 1]]);
+lanes.push([innerRing[innerRing.length - 1], "OV"]); // AB -> OV; OV-CN-HD closes it
 
 const wormholes = [
   ["PL", "FM"],

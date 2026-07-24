@@ -61,157 +61,157 @@ systems:
     ring: inner
     planet: ocean
     neutrals: 1
-    position: { x: 453, y: 676 }
+    position: { x: 448, y: 693 }
   - code: RC
     name: Red Choir
     ring: inner
     planet: volcanic
     neutrals: 1
-    position: { x: 376, y: 715 }
+    position: { x: 368, y: 729 }
   - code: SV
     name: Silica Verge
     ring: middle
     planet: barren
     hazard: true
     neutrals: 1
-    position: { x: 278, y: 722 }
+    position: { x: 268, y: 732 }
   - code: AR
     name: Altair Reach
     ring: middle
     planet: terran
     neutrals: 0
-    position: { x: 171, y: 690 }
+    position: { x: 161, y: 696 }
   - code: CW
     name: Cinderwake
     ring: outer
     planet: volcanic
     rim_gate: true
     neutrals: 0
-    position: { x: 69, y: 615 }
+    position: { x: 60, y: 618 }
   - code: PL
     name: Pelagos
     ring: outer
     planet: ocean
     rim_gate: true
     neutrals: 0
-    position: { x: -12, y: 500 }
+    position: { x: -20, y: 500 }
   - code: AG
     name: Aurora Gate
     ring: inner
     planet: ice
     neutrals: 1
-    position: { x: 318, y: 510 }
+    position: { x: 300, y: 510 }
   - code: TA
     name: Tethys Arc
     ring: inner
     planet: ocean
     neutrals: 1
-    position: { x: 257, y: 448 }
+    position: { x: 242, y: 445 }
   - code: FH
     name: Forgeheart
     ring: middle
     planet: volcanic
     hazard: true
     neutrals: 1
-    position: { x: 220, y: 357 }
+    position: { x: 208, y: 351 }
   - code: ZC
     name: Zephyr Crown
     ring: middle
     planet: gas_giant
     neutrals: 0
-    position: { x: 218, y: 246 }
+    position: { x: 209, y: 238 }
   - code: NB
     name: Nacre Belt
     ring: outer
     planet: ocean
     rim_gate: true
     neutrals: 0
-    position: { x: 257, y: 126 }
+    position: { x: 252, y: 118 }
   - code: VG
     name: Viridian Gate
     ring: outer
     planet: terran
     rim_gate: true
     neutrals: 0
-    position: { x: 342, y: 13 }
+    position: { x: 339, y: 5 }
   - code: GW
     name: Greenwake
     ring: inner
     planet: terran
     neutrals: 1
-    position: { x: 435, y: 330 }
+    position: { x: 428, y: 313 }
   - code: JL
     name: "Jove's Lantern"
     ring: inner
     planet: gas_giant
     neutrals: 1
-    position: { x: 474, y: 253 }
+    position: { x: 472, y: 237 }
   - code: PA
     name: Pale Anchor
     ring: middle
     planet: ice
     neutrals: 1
-    position: { x: 549, y: 190 }
+    position: { x: 551, y: 176 }
   - code: OS
     name: Ossuary
     ring: middle
     planet: barren
     hazard: true
     neutrals: 0
-    position: { x: 655, y: 153 }
+    position: { x: 659, y: 142 }
   - code: EF
     name: Emberfall
     ring: outer
     planet: volcanic
     rim_gate: true
     neutrals: 0
-    position: { x: 781, y: 153 }
+    position: { x: 787, y: 146 }
   - code: FM
     name: Frostmere
     ring: outer
     planet: ice
     rim_gate: true
     neutrals: 0
-    position: { x: 914, y: 199 }
+    position: { x: 921, y: 194 }
   - code: AB
     name: Ashen Bloom
     ring: inner
     planet: ice
     neutrals: 1
-    position: { x: 641, y: 385 }
+    position: { x: 655, y: 374 }
   - code: CS
     name: Cloudspire
     ring: inner
     planet: gas_giant
     neutrals: 1
-    position: { x: 727, y: 399 }
+    position: { x: 741, y: 393 }
   - code: KD
     name: Kestrel Dust
     ring: middle
     planet: barren
     hazard: true
     neutrals: 1
-    position: { x: 810, y: 451 }
+    position: { x: 824, y: 449 }
   - code: MR
     name: Meridian
     ring: middle
     planet: terran
     neutrals: 0
-    position: { x: 878, y: 540 }
+    position: { x: 890, y: 541 }
   - code: BL
     name: Bellows
     ring: outer
     planet: gas_giant
     rim_gate: true
     neutrals: 0
-    position: { x: 916, y: 660 }
+    position: { x: 926, y: 663 }
   - code: SR
     name: Sable Rift
     ring: outer
     planet: barren
     rim_gate: true
     neutrals: 0
-    position: { x: 914, y: 801 }
+    position: { x: 921, y: 806 }
 
 wormholes:
   - [PL, FM]
@@ -253,3 +253,7 @@ hyperlanes:
   - [KD, MR]
   - [MR, BL]
   - [BL, SR]
+  - [HD, AG]
+  - [AG, GW]
+  - [GW, AB]
+  - [AB, OV]

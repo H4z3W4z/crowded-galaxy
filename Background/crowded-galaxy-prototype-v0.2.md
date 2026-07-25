@@ -203,7 +203,11 @@ Traits are the game's random Special Powers. Cut in v0.2: Psionic, Cybernetic, R
 
 **Every game generates its own galaxy from its seed.** The map is no longer a fixed board: `packages/engine/src/mapgen.ts` builds it at `createGame` time and it travels with the game state, so it serializes to the database and to every client. The same seed always reproduces the same galaxy (replays and server validation still work); different games look and play differently.
 
-What varies per game: which world sits where, every world's **terrain**, the **names** (drawn from a pool of ~50), where the **Relics**, **Hazards** and **Rim Gates** fall, which arm tips the **wormholes** bridge, and a per-world positional jitter so no two galaxies look alike. What stays fixed is the tuned skeleton below — so the balance work holds while the strategy changes every game.
+**Terrain comes in contiguous regions (v0.7).** Each of the six types is grown as a connected blob of ~5 worlds rather than scattered, so a galaxy has an ocean sector, a volcanic frontier and so on. Measured: same-terrain adjacency **50.8%** (was 14.2% — *below* the 16.7% random baseline), largest region **5.07 worlds** (was 2.89). This is what lets habitat be territory: a homeland worth taking and holding, somewhere for two players who want the same terrain to collide, and something for the generator to vary that actually changes play rather than scenery.
+
+**Known consequence, not yet tuned:** clustering raised scoring to **~13.3 Influence/turn with 47% of turns above 13**, against the §11 target of 8–13. The habitat share of scoring only reached 23.4% (target 33–50%) because the flat per-system line and Relics rose alongside it. The next tuning pass should cool the economy — the strongest candidates are shortening the game (the score curve flattens after round 7, so 9–10 rounds may be the right default) or raising the base conquest cost, rather than shrinking the habitat bonus which is the thing meant to matter.
+
+What varies per game: which world sits where, every world's **terrain region layout**, the **names** (drawn from a pool of ~50), where the **Relics**, **Hazards** and **Rim Gates** fall, which arm tips the **wormholes** bridge, and a per-world positional jitter so no two galaxies look alike. What stays fixed is the tuned skeleton below — so the balance work holds while the strategy changes every game.
 
 A **5-arm spiral galaxy**, one arm per core node. **31 systems**, structure:
 

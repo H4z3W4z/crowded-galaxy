@@ -174,7 +174,14 @@ function targetValue(g: GameState, player: PlayerId, target: SystemId, cost: num
   const def = g.map.systems[target]!;
   const habs = favoredHabitats(g, player);
   let inf = 1; // base system score
-  if (habs.some((h) => def.planets.includes(h))) inf += 1;
+  if (habs.some((h) => def.planets.includes(h))) {
+    inf += 1;
+    // Terrain comes in regions now, so a matching world is also a doorway into
+    // more of the same. Value the neighbourhood, not just the tile — this is
+    // what turns habitat from a rounding error into a homeland worth taking.
+    const more = neighbors(g, target).filter((n) => habs.some((h) => g.map.systems[n]!.planet === h)).length;
+    inf += Math.min(more, 3) * 0.45;
+  }
   const trait = g.players[player]!.active!.trait;
   if (def.relic) inf += 1; // Relics pay every civilization
   if (trait === "ancient" && def.relic) inf += 1; // and double for Ancient

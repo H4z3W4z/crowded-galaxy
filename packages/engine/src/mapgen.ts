@@ -61,19 +61,6 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
   [rng, names] = shuffle(rng, NAME_POOL);
   names = names.slice(0, total);
 
-  // Terrain: an even spread of the six types, then shuffled. Which world is
-  // which type changes every game, so habitat strategy changes with it.
-  // Even split, with the remainder handed to randomly chosen types — otherwise
-  // the same type (terran) would silently get an extra world in every galaxy.
-  const planets: PlanetType[] = [];
-  const per = Math.floor(total / PLANET_TYPES.length);
-  for (const type of PLANET_TYPES) for (let i = 0; i < per; i++) planets.push(type);
-  let spare: PlanetType[];
-  [rng, spare] = shuffle(rng, PLANET_TYPES);
-  for (let i = 0; planets.length < total; i++) planets.push(spare[i % spare.length]!);
-  let planetOrder: PlanetType[];
-  [rng, planetOrder] = shuffle(rng, planets);
-
   const used = new Set<string>();
   const systems: Record<SystemId, SystemDef> = {};
   const systemIds: SystemId[] = [];
@@ -87,7 +74,10 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
     return [a - amount, b - amount];
   };
 
-  const add = (name: string, planet: PlanetType, ring: SystemDef["ring"], x: number, y: number): SystemId => {
+  // Terrain is assigned after the graph exists (see growTerrain) so it can form
+  // contiguous regions rather than confetti.
+  const add = (name: string, ring: SystemDef["ring"], x: number, y: number): SystemId => {
+    const planet: PlanetType = "terran"; // placeholder, overwritten below
     const code = codeFor(name, used);
     used.add(code);
     systems[code] = {
@@ -99,7 +89,7 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
   };
 
   // --- Core: centre + a ring of `armCount` nodes ---
-  const centre = add(names[p]!, planetOrder[p]!, "core", CX, CY);
+  const centre = add(names[p]!, "core", CX, CY);
   p += 1;
   const coreRing: SystemId[] = [];
   const baseAngles: number[] = [];
@@ -108,7 +98,7 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
     baseAngles.push(angle);
     const [jx, jy] = jitter(6);
     const id = add(
-      names[p]!, planetOrder[p]!, "core",
+      names[p]!, "core",
       Math.round(CX + Math.cos(rad(angle)) * CORE_RING_R) + jx,
       Math.round(CY + Math.sin(rad(angle)) * CORE_RING_R) + jy,
     );
@@ -131,7 +121,7 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
       const [jx, jy] = jitter(9);
       const ring: SystemDef["ring"] = j <= 1 ? "inner" : j === 2 ? "middle" : "outer";
       const id = add(
-        names[p]!, planetOrder[p]!, ring,
+        names[p]!, ring,
         Math.round(CX + Math.cos(rad(angle)) * r) + jx,
         Math.round(CY + Math.sin(rad(angle)) * r) + jy,
       );
@@ -147,6 +137,61 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
 
   // Second ring: pentagon joining the inner-arm systems around the core.
   for (let i = 0; i < armInner.length; i++) lanes.push([armInner[i]!, armInner[(i + 1) % armInner.length]!]);
+
+  // --- Terrain: contiguous regions, not confetti ---
+  // Uniform shuffling produced same-terrain adjacency BELOW the random baseline,
+  // so habitat could never be territory: no ocean sector to take and hold, and
+  // nothing for two players who want the same terrain to collide over.
+  {
+    const laneAdj: Record<SystemId, SystemId[]> = {};
+    for (const id of systemIds) laneAdj[id] = [];
+    for (const [a, b] of lanes) {
+      laneAdj[a]!.push(b);
+      laneAdj[b]!.push(a);
+    }
+    const perType = Math.floor(total / PLANET_TYPES.length);
+    let quotas: { type: PlanetType; left: number }[];
+    [rng, quotas] = shuffle(rng, PLANET_TYPES.map((type) => ({ type, left: perType })));
+    for (let i = 0; i < total - perType * PLANET_TYPES.length; i++) quotas[i % quotas.length]!.left += 1;
+
+    const claimed: Record<SystemId, PlanetType> = {};
+    const fronts: SystemId[][] = [];
+    let seedPool: SystemId[];
+    [rng, seedPool] = shuffle(rng, systemIds);
+    for (const q of quotas) {
+      const seed = seedPool.find((id) => !(id in claimed))!;
+      claimed[seed] = q.type;
+      q.left -= 1;
+      fronts.push([seed]);
+    }
+    // Grow every region a world at a time, so regions stay comparable in size.
+    for (let growing = true; growing; ) {
+      growing = false;
+      for (let i = 0; i < quotas.length; i++) {
+        const q = quotas[i]!;
+        if (q.left <= 0) continue;
+        const edge: SystemId[] = [];
+        for (const id of fronts[i]!) for (const n of laneAdj[id]!) if (!(n in claimed)) edge.push(n);
+        const pool = edge.length > 0 ? edge : systemIds.filter((id) => !(id in claimed));
+        if (pool.length === 0) {
+          q.left = 0;
+          continue;
+        }
+        let pick: number;
+        [rng, pick] = nextInt(rng, pool.length);
+        const chosen = pool[pick]!;
+        claimed[chosen] = q.type;
+        q.left -= 1;
+        fronts[i]!.push(chosen);
+        growing = true;
+      }
+    }
+    for (const id of systemIds) {
+      const type = claimed[id]!;
+      systems[id]!.planet = type;
+      systems[id]!.planets = [type];
+    }
+  }
 
   // --- Rim Gates: the outer two of every arm are the frontier ---
   for (const chain of armAll) {

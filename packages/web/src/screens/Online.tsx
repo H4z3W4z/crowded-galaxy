@@ -26,12 +26,27 @@ function Shell({ title, children, back }: { title: string; children: React.React
 export function Home() {
   const setScreen = useStore((s) => s.setScreen);
   const me = useStore((s) => s.me);
+  const saved = useStore((s) => s.game);
+  const mode = useStore((s) => s.mode);
+  const resumeGame = useStore((s) => s.resumeGame);
+  const discardGame = useStore((s) => s.discardGame);
+  const canResume = mode === "local" && saved !== null && saved.phase !== "over";
   return (
     <Shell title="Crowded Galaxy">
       <div style={{ color: "var(--ink-2)", marginBottom: 20 }}>The galaxy is too small for everyone.</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <Button variant="gold" size="lg" icon="rocket" onClick={() => setScreen("localSetup")}>
-          Local game (this device)
+        {canResume && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <Button variant="gold" size="lg" icon="rocket" style={{ flex: 1 }} onClick={resumeGame}>
+              Resume game — round {saved!.round} of {saved!.config.rounds}
+            </Button>
+            <Button variant="ghost" size="sm" icon="x" title="Discard the saved game" onClick={discardGame}>
+              Discard
+            </Button>
+          </div>
+        )}
+        <Button variant={canResume ? "secondary" : "gold"} size="lg" icon="rocket" onClick={() => setScreen("localSetup")}>
+          {canResume ? "New local game" : "Local game (this device)"}
         </Button>
         <Button variant="primary" size="lg" icon="users" onClick={() => setScreen(me ? "tables" : "login")}>
           Play online {me ? `— ${me.name}` : ""}

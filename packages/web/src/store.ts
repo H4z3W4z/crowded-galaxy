@@ -32,6 +32,9 @@ interface Store {
   start: (seats: GameConfig["seats"], rounds: number) => void;
   openOnlineGame: (gameId: string) => Promise<void>;
   leaveOnlineGame: () => void;
+  leaveToMenu: () => void;
+  resumeGame: () => void;
+  discardGame: () => void;
   dispatch: (action: Action) => boolean;
   undo: () => void;
   select: (id: string | null) => void;
@@ -165,6 +168,20 @@ export const useStore = create<Store>((set, get) => ({
     get().closeSocket?.();
     set({ mode: "local", onlineGameId: null, mySeat: null, game: null, closeSocket: null, screen: "tables" });
   },
+
+  /** Step out of a game without losing it. A local game has no server copy, so
+   *  leaving keeps it saved and the home screen offers to resume. */
+  leaveToMenu: () => {
+    if (get().mode === "online") {
+      get().leaveOnlineGame();
+      return;
+    }
+    set({ screen: "home", selected: null, error: null });
+  },
+
+  resumeGame: () => set({ screen: "game", selected: null, error: null }),
+
+  discardGame: () => set({ game: null, history: [], screen: "home", selected: null, error: null }),
 
   dispatch: (action) => {
     const { game, history, mode, onlineGameId } = get();

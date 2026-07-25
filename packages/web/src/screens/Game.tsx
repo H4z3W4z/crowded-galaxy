@@ -33,6 +33,7 @@ export function Game() {
   const dispatch = useStore((s) => s.dispatch);
   const undo = useStore((s) => s.undo);
   const reset = useStore((s) => s.reset);
+  const leaveToMenu = useStore((s) => s.leaveToMenu);
   const selected = useStore((s) => s.selected);
   const select = useStore((s) => s.select);
   const error = useStore((s) => s.error);
@@ -112,11 +113,15 @@ export function Game() {
             Undo
           </Button>
         )}
-        {mode === "online" && (
-          <Button variant="ghost" size="sm" icon="door-open" onClick={reset}>
-            Leave game (keeps running)
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          icon="door-open"
+          title={mode === "online" ? "The game keeps running; resume it from the lobby." : "Your game is saved — resume it from the menu."}
+          onClick={leaveToMenu}
+        >
+          {mode === "online" ? "Leave game (keeps running)" : "Leave game (saved)"}
+        </Button>
       </div>
 
       {needsMarket && <MarketOverlay game={game} online={mode === "online"} onLeave={reset} />}

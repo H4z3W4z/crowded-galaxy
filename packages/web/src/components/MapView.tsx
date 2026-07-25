@@ -32,6 +32,7 @@ export interface MapViewProps {
 
 export const MapView = memo(function MapView({ game, selected, reachable, onSelect }: MapViewProps) {
   const { systems: MAP, systemIds: IDS, lanes: LANES, wormholes: WORMS } = game.map;
+  const hand = game.players[game.current]?.active?.hand ?? 0;
   const LAYOUT = MAP; // systems carry their own x/y
   const wormSet = new Set(WORMS.flat());
   return (
@@ -64,6 +65,7 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
         const isSel = selected === code;
         const cost = reachable.get(code);
         const canReach = cost !== undefined;
+        const affordable = cost !== undefined && cost <= hand;
         const ownerColor = occ ? P_COLORS[occ.player]! : sys.neutrals > 0 ? "var(--neutral-token)" : null;
         const isRemnant = occ?.kind === "remnant";
         const count = occ ? sys.tokens : sys.neutrals;
@@ -81,14 +83,16 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
               : "Unclaimed",
           ...(sys.starbases > 0 ? [`${sys.starbases} Starbase (+1 defense each)`] : []),
           ...(sys.bulwark ? ["Bulwark — cannot be conquered"] : []),
-          ...(cost !== undefined ? [`You can conquer this now for ${cost}`] : []),
+          ...(cost !== undefined ? [affordable ? `You can conquer this now for ${cost}` : `Costs ${cost} — more than your ${hand} in hand`] : []),
         ];
         const ORB = 50; // planet is the system, sized like the old node
         return (
           <g key={code} onClick={() => onSelect(code)} style={{ cursor: "pointer" }}>
             <title>{tipLines.join("\n")}</title>
             {def.rimGate && <circle cx={pos.x} cy={pos.y} r={35} fill="none" stroke="var(--starlight-2)" strokeWidth={1.5} strokeDasharray="3 6" opacity={0.65} />}
-            {canReach && !isSel && <circle cx={pos.x} cy={pos.y} r={31} fill="none" stroke="var(--p3)" strokeWidth={2.5} strokeDasharray="5 5" opacity={0.9} />}
+            {canReach && !isSel && (
+              <circle cx={pos.x} cy={pos.y} r={31} fill="none" stroke={affordable ? "var(--starlight)" : "var(--ink-3)"} strokeWidth={affordable ? 2.5 : 1.5} strokeDasharray="5 5" opacity={affordable ? 0.95 : 0.5} />
+            )}
             {sys.bulwark && <circle cx={pos.x} cy={pos.y} r={35} fill="none" stroke="var(--ink)" strokeWidth={2} opacity={0.9} />}
             {/* The planet itself is the node. */}
             <PlanetOrb type={def.planet} size={ORB} x={pos.x - ORB / 2} y={pos.y - ORB / 2} style={occ && !isRemnant ? { filter: `drop-shadow(0 0 7px ${ownerColor})` } : undefined} />
@@ -100,8 +104,17 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
                 badges can never cover them. */}
             {canReach && (
               <g>
-                <circle cx={pos.x} cy={pos.y + 21} r={10} fill="var(--p3)" stroke="var(--space-0)" strokeWidth={2} />
-                <text x={pos.x} y={pos.y + 25} textAnchor="middle" fill="var(--on-accent)" style={{ font: "700 11px var(--font-mono)" }}>
+                <rect
+                  x={pos.x - 13}
+                  y={pos.y + 12}
+                  width={26}
+                  height={18}
+                  rx={5}
+                  fill={affordable ? "var(--influence)" : "var(--space-2)"}
+                  stroke="var(--space-0)"
+                  strokeWidth={2}
+                />
+                <text x={pos.x} y={pos.y + 25} textAnchor="middle" fill={affordable ? "var(--on-accent)" : "var(--ink-3)"} style={{ font: "700 11px var(--font-mono)" }}>
                   {cost}
                 </text>
               </g>
@@ -115,9 +128,12 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
               </g>
             )}
             {def.relic && (
-              <text x={pos.x - 22} y={pos.y + 26} textAnchor="middle" fill="var(--relic)" style={{ font: "14px var(--font-mono)", filter: "drop-shadow(0 0 4px var(--relic))" }}>
-                ✦
-              </text>
+              <g style={{ filter: "drop-shadow(0 0 5px var(--relic))" }}>
+                <circle cx={pos.x - 22} cy={pos.y + 21} r={9.5} fill="var(--space-0)" stroke="var(--relic)" strokeWidth={2} />
+                <text x={pos.x - 22} y={pos.y + 25.5} textAnchor="middle" fill="var(--relic)" style={{ font: "700 13px var(--font-mono)" }}>
+                  ✦
+                </text>
+              </g>
             )}
             {wormSet.has(code) && <circle cx={pos.x + 21} cy={pos.y + 19} r={5} fill="none" stroke="var(--wormhole)" strokeWidth={2} style={{ filter: "drop-shadow(0 0 4px var(--wormhole))" }} />}
             {(occ || sys.neutrals > 0) && (
@@ -129,7 +145,7 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
               </g>
             )}
             {sys.starbases > 0 && (
-              <text x={pos.x + 21} y={pos.y + 38} textAnchor="middle" fill="var(--ink-2)" style={{ font: "700 11px var(--font-mono)" }}>
+              <text x={pos.x + 32} y={pos.y + 14} textAnchor="middle" fill="var(--ink-2)" style={{ font: "700 11px var(--font-mono)", paintOrder: "stroke", stroke: "var(--space-0)", strokeWidth: 3 }}>
                 ▲{sys.starbases}
               </text>
             )}

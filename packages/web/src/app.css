@@ -10,3 +10,18 @@ html, body, #root { height: 100%; }
   animation: cg-rot 0.8s linear infinite;
 }
 @keyframes cg-rot { to { transform: rotate(360deg); } }
+
+/* Board layout. Below ~1000px the fixed 400px sidebar crushed the map pane to
+   zero width, so the whole galaxy went off-screen; stack instead. */
+.cg-board { display: flex; height: 100vh; overflow: hidden; }
+.cg-map { flex: 1; min-width: 0; position: relative; }
+.cg-side {
+  width: 400px; flex-shrink: 0; overflow-y: auto; padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
+  border-left: var(--bw) solid var(--ink); background: var(--paper-0);
+}
+@media (max-width: 1000px) {
+  .cg-board { flex-direction: column; }
+  .cg-map { flex: none; height: 52vh; }
+  .cg-side { width: 100%; flex: 1; border-left: none; border-top: var(--bw) solid var(--ink); }
+}

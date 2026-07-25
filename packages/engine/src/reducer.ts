@@ -335,8 +335,8 @@ function requirePhase(g: GameState, phase: GameState["phase"]): void {
   if (g.phase !== phase) throw new RulesError(`wrong phase (${g.phase}, expected ${phase})`);
 }
 
-function log(g: GameState, text: string): void {
-  g.log.push({ round: g.round, player: g.current, text });
+function log(g: GameState, text: string, parts?: { label: string; amount: number }[]): void {
+  g.log.push({ round: g.round, player: g.current, text, ...(parts && parts.length > 0 ? { parts } : {}) });
 }
 
 function rollDie(g: GameState): number {
@@ -539,7 +539,7 @@ function scoreEndOfTurn(g: GameState, player: PlayerId): void {
   const total = totalOf(lines);
   p.influence += total;
   if (p.active) p.active.turnsActive += 1;
-  log(g, `scores ${total} Influence`);
+  log(g, `scores ${total} Influence`, lines);
 }
 
 function collapseCiv(g: GameState, player: PlayerId, scoreCollapse: boolean): void {
@@ -599,7 +599,7 @@ function collapseCiv(g: GameState, player: PlayerId, scoreCollapse: boolean): vo
     const lines = scoreRemnants(g, player);
     const total = totalOf(lines);
     p.influence += total;
-    log(g, `scores ${total} Influence in the collapse`);
+    log(g, `scores ${total} Influence in the collapse`, lines);
   }
 }
 

@@ -117,6 +117,9 @@ export interface LogEntry {
   round: number;
   player: PlayerId;
   text: string;
+  /** Score composition, when this entry is a scoring event. The engine already
+   *  computes it; surfacing it is what lets a player learn the game. */
+  parts?: { label: string; amount: number }[];
 }
 
 export interface GameState {

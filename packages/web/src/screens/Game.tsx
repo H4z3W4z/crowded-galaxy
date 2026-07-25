@@ -77,8 +77,8 @@ export function Game() {
   const needsMarket = !isAI && game.phase === "start" && !p.active;
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-      <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
+    <div className="cg-board">
+      <div className="cg-map">
         <MapView game={game} selected={selected} reachable={reachable} onSelect={(id) => select(selected === id ? null : id)} />
         <LegendButton />
         {mode === "online" && <ConnBadge />}
@@ -89,7 +89,7 @@ export function Game() {
         )}
       </div>
 
-      <div style={{ width: 400, flexShrink: 0, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 12, borderLeft: "var(--bw) solid var(--ink)", background: "var(--paper-0)" }}>
+      <div className="cg-side">
         <Header round={game.round} rounds={game.config.rounds} />
         <Players game={game} />
         {over ? (
@@ -198,6 +198,11 @@ function InfoDot() {
 }
 
 function CivDetail({ sp, tr, onClose }: { sp: { name: string; active: string; remnant: string; habitat: string }; tr: { name: string; ability: string }; onClose: () => void }) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(7,6,18,.72)", zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <Panel surface="paper" onClick={(e: React.MouseEvent) => e.stopPropagation()} style={{ width: 560, maxWidth: "96vw", maxHeight: "92vh", overflowY: "auto" }}>
@@ -373,7 +378,7 @@ function PhaseControls({
         {civ?.trait === "fortress_building" && !game.turn.starbasePlaced && starbases < 6 && selected && own.includes(selected) && (
           <Row>
             <Button variant="secondary" size="sm" icon="castle" onClick={() => dispatch({ type: "placeStarbase", system: selected })}>
-              Starbase on {selected}
+              Starbase on {game.map.systems[selected]!.name}
             </Button>
           </Row>
         )}
@@ -389,14 +394,14 @@ function PhaseControls({
                 dispatch({ type: "moveBulwarks", systems: next });
               }}
             >
-              Toggle Bulwark on {selected}
+              Bulwark on {game.map.systems[selected]!.name}
             </Button>
           </Row>
         )}
         {civ?.species === "verdant_mycelium" && !game.turn.verdantPlaced && selected && own.includes(selected) && hasPlanet(game, selected, "terran") && (
           <Row style={{ marginTop: 6 }}>
             <Button variant="secondary" size="sm" icon="leaf" onClick={() => dispatch({ type: "verdantGrow", system: selected })}>
-              Grow on {selected}
+              Grow on {game.map.systems[selected]!.name}
             </Button>
           </Row>
         )}
@@ -450,7 +455,7 @@ function RedeployControls({ game }: { game: NonNullable<ReturnType<typeof useSto
           ? `You have ${-pool} more tokens on the map than you can keep — the Reavers' loan is going back. Press − until the pool reaches 0. A system reduced to nothing is abandoned.`
           : "Spread your army across your systems — at least 1 token in each. Anything left in the pool stays in hand."}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 220, overflowY: "auto" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 260, overflowY: "auto", paddingBottom: 4, borderBottom: "1px solid var(--line)" }}>
         {own.map((id) => (
           <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--font-mono)", fontSize: 13 }}>
             <span style={{ width: 30 }}>{id}</span>
@@ -611,6 +616,11 @@ function Log({ game }: { game: NonNullable<ReturnType<typeof useStore.getState>[
           <div key={game.log.length - i} style={{ fontSize: 12, color: i === 0 ? "var(--ink)" : "var(--ink-3)" }}>
             <span style={{ fontFamily: "var(--font-mono)", color: `var(--p${e.player + 1}-deep)` }}>{game.config.seats[e.player]!.name}</span>{" "}
             <span style={{ color: "var(--ink-3)", fontFamily: "var(--font-mono)", fontSize: 10 }}>r{e.round}</span> {e.text}
+            {e.parts && e.parts.length > 0 && (
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--ink-3)", paddingLeft: 10, marginTop: 1 }}>
+                {e.parts.map((pt) => `${pt.label} +${pt.amount}`).join(" · ")}
+              </div>
+            )}
           </div>
         ))}
       </div>

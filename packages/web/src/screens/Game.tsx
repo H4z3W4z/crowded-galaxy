@@ -443,6 +443,14 @@ function RedeployControls({ game }: { game: NonNullable<ReturnType<typeof useSto
   const [dist, setDist] = useState<Record<string, number>>(() => Object.fromEntries(own.map((id) => [id, game.systems[id]!.tokens])));
   const used = Object.values(dist).reduce((s, n) => s + n, 0);
   const pool = available - used;
+  const civ = p.active;
+  const starbaseTotal = own.reduce((s, id) => s + game.systems[id]!.starbases, 0);
+  const hasPostActions =
+    (civ?.trait === "fortress_building" && starbaseTotal < 6) ||
+    civ?.trait === "heroic" ||
+    civ?.trait === "diplomatic" ||
+    civ?.trait === "twilight" ||
+    civ?.species === "verdant_mycelium";
 
   return (
     <Panel surface="inset" pad="12px">
@@ -450,21 +458,33 @@ function RedeployControls({ game }: { game: NonNullable<ReturnType<typeof useSto
         Redeploy — pool <b>{pool}</b>
         {game.turn.jovianBonus > 0 && <span style={{ color: "var(--ink-3)", fontSize: 12 }}> (returning {game.turn.jovianBonus} Reaver tokens)</span>}
       </ActionTitle>
-      <div style={{ fontSize: 13, color: pool < 0 ? "var(--danger)" : "var(--ink-3)", marginBottom: 8 }}>
+      <div style={{ fontSize: 13, color: pool < 0 ? "var(--danger)" : "var(--ink-3)", marginBottom: 8, lineHeight: 1.45 }}>
         {pool < 0
           ? `You have ${-pool} more tokens on the map than you can keep — the Reavers' loan is going back. Press − until the pool reaches 0. A system reduced to nothing is abandoned.`
-          : "Spread your army across your systems — at least 1 token in each. Anything left in the pool stays in hand."}
+          : "Move your army between systems: − takes a token off a world (into the pool), + puts one on. Every world you keep needs at least 1."}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 260, overflowY: "auto", paddingBottom: 4, borderBottom: "1px solid var(--line)" }}>
         {own.map((id) => (
           <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--font-mono)", fontSize: 13 }}>
             <span style={{ width: 30 }}>{id}</span>
             <span style={{ flex: 1, color: "var(--ink-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{game.map.systems[id]!.name}</span>
-            <button className="cg-btn cg-btn--ghost cg-btn--sm" disabled={(dist[id] ?? 0) <= 1} onClick={() => setDist({ ...dist, [id]: (dist[id] ?? 0) - 1 })}>
+            <button
+              className="cg-btn cg-btn--secondary cg-btn--sm"
+              style={{ minWidth: 38 }}
+              title={`Take a token off ${game.map.systems[id]!.name}`}
+              disabled={(dist[id] ?? 0) <= 1}
+              onClick={() => setDist({ ...dist, [id]: (dist[id] ?? 0) - 1 })}
+            >
               −
             </button>
-            <b style={{ width: 20, textAlign: "center" }}>{dist[id] ?? 0}</b>
-            <button className="cg-btn cg-btn--ghost cg-btn--sm" disabled={pool <= 0} onClick={() => setDist({ ...dist, [id]: (dist[id] ?? 0) + 1 })}>
+            <b style={{ width: 24, textAlign: "center", fontSize: 15 }}>{dist[id] ?? 0}</b>
+            <button
+              className="cg-btn cg-btn--secondary cg-btn--sm"
+              style={{ minWidth: 38 }}
+              title={pool <= 0 ? "Pool is empty — take a token off another world first" : `Move a token to ${game.map.systems[id]!.name}`}
+              disabled={pool <= 0}
+              onClick={() => setDist({ ...dist, [id]: (dist[id] ?? 0) + 1 })}
+            >
               +
             </button>
           </div>
@@ -476,13 +496,29 @@ function RedeployControls({ game }: { game: NonNullable<ReturnType<typeof useSto
           size="sm"
           icon="check"
           disabled={pool < 0}
-          title={pool < 0 ? `Over by ${-pool}: press − until the pool reaches 0.` : "Lock in this deployment."}
-          onClick={() => dispatch({ type: "redeploy", dist })}
+          title={
+            pool < 0
+              ? `Over by ${-pool}: press − until the pool reaches 0.`
+              : hasPostActions
+                ? "Lock in this arrangement, then use your civilization's abilities."
+                : "Lock in this arrangement, score, and end your turn."
+          }
+          onClick={() => {
+            if (!dispatch({ type: "redeploy", dist })) return;
+            // Nothing to do in the consolidate phase — don't make the player
+            // click through an empty step.
+            if (!hasPostActions) dispatch({ type: "endTurn" });
+          }}
         >
-          Confirm deployment
+          {hasPostActions ? "Confirm deployment" : "Confirm & end turn"}
         </Button>
-        <Button variant="secondary" size="sm" onClick={() => dispatch({ type: "endTurn" })}>
-          Keep as is & end turn
+        <Button
+          variant="ghost"
+          size="sm"
+          title="Skip arranging: spread the army automatically, score, and end the turn."
+          onClick={() => dispatch({ type: "endTurn" })}
+        >
+          Skip & end turn
         </Button>
       </Row>
       {pool > 0 && (

@@ -46,13 +46,27 @@ export const MapView = memo(function MapView({ game, selected, reachable, onSele
       {WORMS.map(([a, b], i) => {
         const A = LAYOUT[a]!;
         const B = LAYOUT[b]!;
+        // Bow the arc perpendicular to the chord, scaled to its length. The old
+        // version pushed the control point 620 units radially out from the
+        // midpoint — when two endpoints sit roughly opposite each other the
+        // midpoint lands on the galactic centre, so that direction was
+        // near-undefined and the arc was flung across the whole board.
         const mx = (A.x + B.x) / 2;
         const my = (A.y + B.y) / 2;
-        let dx = mx - 500;
-        let dy = my - 500;
-        const len = Math.hypot(dx, dy) || 1;
-        const cx = mx + (dx / len) * 620;
-        const cy = my + (dy / len) * 620;
+        const vx = B.x - A.x;
+        const vy = B.y - A.y;
+        const chord = Math.hypot(vx, vy) || 1;
+        // Perpendicular, always bowing away from the centre so arcs never cut
+        // straight through the core.
+        let nx = -vy / chord;
+        let ny = vx / chord;
+        if (nx * (mx - 500) + ny * (my - 500) < 0) {
+          nx = -nx;
+          ny = -ny;
+        }
+        const bow = Math.min(chord * 0.35, 190);
+        const cx = mx + nx * bow;
+        const cy = my + ny * bow;
         return (
           <path key={i} d={`M ${A.x} ${A.y} Q ${cx} ${cy} ${B.x} ${B.y}`} fill="none" stroke="var(--wormhole)" strokeWidth={2.5} strokeDasharray="7 7" opacity={0.85} style={{ filter: "drop-shadow(0 0 5px var(--wormhole))", pointerEvents: "none" }} />
         );

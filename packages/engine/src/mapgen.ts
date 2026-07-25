@@ -158,11 +158,21 @@ export function generateMap(rngState: number, opts: MapGenOptions = DEFAULT_MAPG
     const fronts: SystemId[][] = [];
     let seedPool: SystemId[];
     [rng, seedPool] = shuffle(rng, systemIds);
+    // Two seeds per terrain, not one. A single seed grew each type into one
+    // ~5-world blob, so an entire spiral arm came out the same colour and the
+    // galaxy stopped looking natural. Two smaller pockets still give habitat
+    // something to cluster around without painting the map in stripes.
+    const SEEDS_PER_TYPE = 2;
     for (const q of quotas) {
-      const seed = seedPool.find((id) => !(id in claimed))!;
-      claimed[seed] = q.type;
-      q.left -= 1;
-      fronts.push([seed]);
+      const front: SystemId[] = [];
+      for (let s = 0; s < SEEDS_PER_TYPE && q.left > 0; s++) {
+        const seed = seedPool.find((id) => !(id in claimed));
+        if (!seed) break;
+        claimed[seed] = q.type;
+        q.left -= 1;
+        front.push(seed);
+      }
+      fronts.push(front);
     }
     // Grow every region a world at a time, so regions stay comparable in size.
     for (let growing = true; growing; ) {

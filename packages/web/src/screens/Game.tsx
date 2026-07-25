@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  aiNextAction,
-  checkConquest,
+    checkConquest,
   checkRemnantConquest,
   conversionTargets,
   hasPlanet,
@@ -31,29 +30,20 @@ const PLANETS: PlanetType[] = ["terran", "ocean", "barren", "gas_giant", "ice", 
 export function Game() {
   const game = useStore((s) => s.game)!;
   const dispatch = useStore((s) => s.dispatch);
-  const undo = useStore((s) => s.undo);
-  const reset = useStore((s) => s.reset);
-  const leaveToMenu = useStore((s) => s.leaveToMenu);
+  const reset = useStore((s) => s.leaveGame);
+  const leaveGame = useStore((s) => s.leaveGame);
   const selected = useStore((s) => s.selected);
   const select = useStore((s) => s.select);
   const error = useStore((s) => s.error);
   const clearError = useStore((s) => s.clearError);
 
-  const mode = useStore((s) => s.mode);
   const mySeat = useStore((s) => s.mySeat);
   const player = game.current;
   const seat = game.config.seats[player]!;
   const p = game.players[player]!;
-  // "waiting" = this device may not act right now (AI turn locally, or someone else online).
-  const isAI = mode === "local" ? seat.ai : mySeat === null || player !== mySeat;
+  // "waiting" = it is not this player's turn (an AI seat, or another human).
+  const isAI = mySeat === null || player !== mySeat;
   const over = game.phase === "over";
-
-  // AI autoplay — local mode only; online, the server plays AI seats.
-  useEffect(() => {
-    if (mode !== "local" || !seat.ai || over) return;
-    const t = setTimeout(() => dispatch(aiNextAction(game)), AI_DELAY_MS);
-    return () => clearTimeout(t);
-  }, [game, seat.ai, over, dispatch, mode]);
 
   // Error toast auto-clear.
   useEffect(() => {
@@ -82,7 +72,7 @@ export function Game() {
       <div className="cg-map">
         <MapView game={game} selected={selected} reachable={reachable} onSelect={(id) => select(selected === id ? null : id)} />
         <LegendButton />
-        {mode === "online" && <ConnBadge />}
+        <ConnBadge />
         {error && (
           <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", background: "var(--pt-volcanic)", color: "var(--paper-0)", border: "var(--bw) solid var(--ink)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-chunk)", padding: "10px 18px", fontFamily: "var(--font-display)", fontWeight: 700 }}>
             {error}
@@ -108,23 +98,18 @@ export function Game() {
           </>
         )}
         <Log game={game} />
-        {!over && !isAI && mode === "local" && (
-          <Button variant="ghost" size="sm" icon="chevron-left" onClick={undo}>
-            Undo
-          </Button>
-        )}
         <Button
           variant="ghost"
           size="sm"
           icon="door-open"
-          title={mode === "online" ? "The game keeps running; resume it from the lobby." : "Your game is saved — resume it from the menu."}
-          onClick={leaveToMenu}
+          title="The game keeps running; resume it from the lobby."
+          onClick={leaveGame}
         >
-          {mode === "online" ? "Leave game (keeps running)" : "Leave game (saved)"}
+          Leave game (keeps running)
         </Button>
       </div>
 
-      {needsMarket && <MarketOverlay game={game} online={mode === "online"} onLeave={reset} />}
+      {needsMarket && <MarketOverlay game={game} online onLeave={reset} />}
     </div>
   );
 }

@@ -23,39 +23,6 @@ function Shell({ title, children, back }: { title: string; children: React.React
   );
 }
 
-export function Home() {
-  const setScreen = useStore((s) => s.setScreen);
-  const me = useStore((s) => s.me);
-  const saved = useStore((s) => s.game);
-  const mode = useStore((s) => s.mode);
-  const resumeGame = useStore((s) => s.resumeGame);
-  const discardGame = useStore((s) => s.discardGame);
-  const canResume = mode === "local" && saved !== null && saved.phase !== "over";
-  return (
-    <Shell title="Crowded Galaxy">
-      <div style={{ color: "var(--ink-2)", marginBottom: 20 }}>The galaxy is too small for everyone.</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {canResume && (
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <Button variant="gold" size="lg" icon="rocket" style={{ flex: 1 }} onClick={resumeGame}>
-              Resume game — round {saved!.round} of {saved!.config.rounds}
-            </Button>
-            <Button variant="ghost" size="sm" icon="x" title="Discard the saved game" onClick={discardGame}>
-              Discard
-            </Button>
-          </div>
-        )}
-        <Button variant={canResume ? "secondary" : "gold"} size="lg" icon="rocket" onClick={() => setScreen("localSetup")}>
-          {canResume ? "New local game" : "Local game (this device)"}
-        </Button>
-        <Button variant="primary" size="lg" icon="users" onClick={() => setScreen(me ? "tables" : "login")}>
-          Play online {me ? `— ${me.name}` : ""}
-        </Button>
-      </div>
-    </Shell>
-  );
-}
-
 export function Login() {
   const setScreen = useStore((s) => s.setScreen);
   const setMe = useStore((s) => s.setMe);
@@ -86,7 +53,14 @@ export function Login() {
   }
 
   return (
-    <Shell title={mode === "signin" ? "Sign in" : "Create account"} back={() => setScreen("home")}>
+    <Shell title="Crowded Galaxy">
+      <div style={{ color: "var(--ink-2)", marginBottom: 18 }}>
+        The galaxy is too small for everyone.{" "}
+        <a href="/field-guide.html" target="_blank" rel="noopener" style={{ color: "var(--influence)" }}>
+          Read the field guide
+        </a>{" "}
+        before your first game.
+      </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <Button variant={mode === "signin" ? "primary" : "secondary"} size="sm" onClick={() => setMode("signin")}>
           Sign in
@@ -135,7 +109,7 @@ export function Login() {
 export function Tables() {
   const setScreen = useStore((s) => s.setScreen);
   const openLobby = useStore((s) => s.openLobby);
-  const openOnlineGame = useStore((s) => s.openOnlineGame);
+  const openGame = useStore((s) => s.openGame);
   const [tables, setTables] = useState<Omit<TableInfo, "seats">[]>([]);
   const [invites, setInvites] = useState<InviteRow[]>([]);
   const [code, setCode] = useState("");
@@ -181,7 +155,19 @@ export function Tables() {
   }
 
   return (
-    <Shell title="Lobby" back={() => setScreen("home")}>
+    <Shell title="Lobby">
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 14, fontSize: 13, color: "var(--ink-3)" }}>
+        <a href="/field-guide.html" target="_blank" rel="noopener" style={{ color: "var(--influence)" }}>
+          Field guide
+        </a>
+        <button
+          className="cg-btn cg-btn--ghost cg-btn--sm"
+          style={{ marginLeft: "auto" }}
+          onClick={() => api.logout().then(() => location.reload())}
+        >
+          Sign out
+        </button>
+      </div>
       {invites.length > 0 && (
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 13, letterSpacing: "var(--tracking-caps)", textTransform: "uppercase", color: "var(--gold, var(--influence))", marginBottom: 8 }}>
@@ -245,7 +231,7 @@ export function Tables() {
                   Open lobby
                 </Button>
               ) : t.game_id ? (
-                <Button variant="gold" size="sm" icon="rocket" onClick={() => void openOnlineGame(t.game_id!)}>
+                <Button variant="gold" size="sm" icon="rocket" onClick={() => void openGame(t.game_id!)}>
                   {t.status === "finished" ? "Review" : "Resume"}
                 </Button>
               ) : null}
@@ -260,7 +246,7 @@ export function Tables() {
 export function Lobby() {
   const tableId = useStore((s) => s.lobbyTableId)!;
   const setScreen = useStore((s) => s.setScreen);
-  const openOnlineGame = useStore((s) => s.openOnlineGame);
+  const openGame = useStore((s) => s.openGame);
   const me = useStore((s) => s.me);
   const [table, setTable] = useState<TableInfo | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -271,7 +257,7 @@ export function Lobby() {
     try {
       const { table } = await api.getTable(tableId);
       setTable(table);
-      if (table.status === "playing" && table.game_id) void openOnlineGame(table.game_id);
+      if (table.status === "playing" && table.game_id) void openGame(table.game_id);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "failed");
     }
@@ -357,7 +343,7 @@ export function Lobby() {
         </div>
       )}
       {isHost ? (
-        <Button variant="gold" size="lg" icon="rocket" onClick={() => api.startTable(table.id).then(({ gameId }) => void openOnlineGame(gameId)).catch((e) => setErr(e.message))}>
+        <Button variant="gold" size="lg" icon="rocket" onClick={() => api.startTable(table.id).then(({ gameId }) => void openGame(gameId)).catch((e) => setErr(e.message))}>
           Start game ({humans} human{humans === 1 ? "" : "s"})
         </Button>
       ) : (

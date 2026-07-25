@@ -1,9 +1,8 @@
 import { Component, useEffect, type ReactNode } from "react";
 import { useStore } from "./store";
 import { api } from "./api";
-import { Setup } from "./screens/Setup";
 import { Game } from "./screens/Game";
-import { Home, Login, Tables, Lobby } from "./screens/Online";
+import { Login, Tables, Lobby } from "./screens/Online";
 
 /** Last line of defence: a render crash used to leave an empty page with only
  *  the CSS starfield showing, which reads as "the game is down". Now it offers
@@ -48,48 +47,51 @@ class Boundary extends Component<{ children: ReactNode }, { err: Error | null }>
 function AppInner() {
   const screen = useStore((s) => s.screen);
   const game = useStore((s) => s.game);
+  const me = useStore((s) => s.me);
   const setMe = useStore((s) => s.setMe);
-  const inProgress = game !== null && game.phase !== "over";
+  const setScreen = useStore((s) => s.setScreen);
 
-  // Restore the signed-in user (cookie session) on load, and reconnect a
-  // persisted online game once auth is confirmed. (Local games restore from
-  // localStorage directly in the store.)
+  // Every game is a server game, so the session decides what you can see.
   useEffect(() => {
     api
       .me()
       .then(({ user }) => {
         setMe(user);
         const st = useStore.getState();
-        if (user && st.mode === "online" && st.onlineGameId && !st.closeSocket) {
-          void st.openOnlineGame(st.onlineGameId).catch(() => {});
+        if (!user) {
+          setScreen("login");
+          return;
         }
+        if (st.screen === "login") setScreen("tables");
+        if (st.gameId && !st.closeSocket) void st.openGame(st.gameId).catch(() => setScreen("tables"));
       })
-      .catch(() => setMe(null));
-  }, [setMe]);
+      .catch(() => {
+        setMe(null);
+        setScreen("login");
+      });
+  }, [setMe, setScreen]);
 
   useEffect(() => {
-    if (!inProgress) return;
+    const inPlay = game !== null && game.phase !== "over";
+    if (!inPlay) return;
     const guard = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = "";
     };
     window.addEventListener("beforeunload", guard);
     return () => window.removeEventListener("beforeunload", guard);
-  }, [inProgress]);
+  }, [game]);
 
+  if (!me) return <Login />;
   switch (screen) {
-    case "localSetup":
-      return <Setup />;
-    case "login":
-      return <Login />;
-    case "tables":
-      return <Tables />;
     case "lobby":
       return <Lobby />;
     case "game":
-      return game ? <Game /> : <Home />;
+      return game ? <Game /> : <Tables />;
+    case "login":
+      return <Tables />;
     default:
-      return <Home />;
+      return <Tables />;
   }
 }
 

@@ -40,7 +40,7 @@ interface Store {
 }
 
 // --- Persistence: survive a tab reload (iOS discards backgrounded tabs). ---
-const PERSIST_KEY = "cg-state-v2";
+const PERSIST_KEY = "cg-state-v3";
 
 interface Persisted {
   screen: Screen;
@@ -51,11 +51,34 @@ interface Persisted {
   history: GameState[];
 }
 
+/** A saved game from an older build can be structurally wrong for the current
+ *  engine — e.g. games saved before the galaxy moved into state have no `map`,
+ *  and rendering one blanks the whole app. Anything that fails this check is
+ *  discarded rather than restored. */
+function isPlayable(game: unknown): game is GameState {
+  const g = game as GameState | null;
+  return !!(
+    g &&
+    g.map &&
+    Array.isArray(g.map.systemIds) &&
+    g.map.systemIds.length > 0 &&
+    g.map.systems &&
+    g.map.adjacency &&
+    Array.isArray(g.players) &&
+    g.config
+  );
+}
+
 function loadPersisted(): Partial<Persisted> {
   try {
     const raw = localStorage.getItem(PERSIST_KEY);
     if (!raw) return {};
     const p = JSON.parse(raw) as Persisted;
+    if (p.game && !isPlayable(p.game)) {
+      p.game = null;
+      p.history = [];
+    }
+    p.history = (p.history ?? []).filter(isPlayable);
     // Don't restore a "game" screen with no game to show.
     if (p.screen === "game" && p.mode === "local" && !p.game) p.screen = "home";
     return p;
